@@ -107,8 +107,8 @@ func randomPosNegOne():
 	else:
 		return 1
 		
-func normalize(val, min, max):
-	return (val - min) / (max - min)
+func normalize(val, minimum, maximum):
+	return (val - minimum) / (maximum - minimum)
 	
 func take_damange():
 	strength -= 1

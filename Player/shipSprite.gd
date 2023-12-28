@@ -16,11 +16,11 @@ const THRUSTER_SHAPE: Array = [Vector2(3,11), Vector2(0,30), Vector2(-3,11), Vec
 var thrusterColorGradient: PackedColorArray = PackedColorArray([Color.DIM_GRAY, Color.BLACK, Color.DIM_GRAY, Color.DIM_GRAY])
 
 func _draw():
-	# draw the ship
-	draw_polyline(PackedVector2Array(SHIP_SHAPE), SHIP_COLOR, 2.0)
-	
 	if !PARENT:
 		PARENT = get_parent()
+		
+	# draw the ship
+	draw_polyline(PackedVector2Array(SHIP_SHAPE), SHIP_COLOR, 2.0)
 		
 	# draw thrusters when parent variable is true for that thruster
 	if PARENT.TURN_LEFT:

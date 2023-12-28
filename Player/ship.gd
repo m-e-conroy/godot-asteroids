@@ -6,6 +6,7 @@ signal fired_projectile(pos, rot)
 var bullet = preload("res://characters/bullet.tscn")
 
 @onready var screen_size = get_viewport_rect().size
+@onready var PARENT := get_parent()
 
 @export_group('Motion Parameters')
 @export var ACCELERATION := 75.0
@@ -56,9 +57,8 @@ func _input(event):
 func _ready():
 	$ProjectileSpawnLocation.position = Vector2(0,-20.0) # set location where the ship's bullets will appear ahead of the ship
 	
-	var parent = get_parent()
-	if parent != null:
-		parent.connect("projectile_destroyed", _on_projectile_destroyed)
+	if (PARENT != null) && (PARENT.has_signal("projectile_destroyed")):
+		PARENT.connect("projectile_destroyed", _on_projectile_destroyed)
 	
 func _physics_process(delta):
 	if THRUST:
