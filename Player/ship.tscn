@@ -1,0 +1,40 @@
+[gd_scene load_steps=7 format=3 uid="uid://delju4rcwlhlq"]
+
+[ext_resource type="Script" path="res://Player/ship.gd" id="1_1fjqd"]
+[ext_resource type="Script" path="res://Player/shipSprite.gd" id="2_m3aby"]
+[ext_resource type="Script" path="res://Player/shipCollision.gd" id="3_0mc52"]
+[ext_resource type="AudioStream" uid="uid://c5kqfu1smyvmg" path="res://sounds/laserRetro_004.ogg" id="4_vfhpp"]
+[ext_resource type="AudioStream" uid="uid://dkdu2x82mehej" path="res://sounds/forceField_000.ogg" id="5_ux7ps"]
+[ext_resource type="AudioStream" uid="uid://dpbaq2ee7a7uq" path="res://sounds/thrusterFire_003.ogg" id="6_j0ddy"]
+
+[node name="ship" type="CharacterBody2D"]
+script = ExtResource("1_1fjqd")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = ExtResource("2_m3aby")
+SHIELD_COLOR = Color(0.984314, 0.141176, 0, 1)
+SHIP_COLOR = Color(0.478431, 0.529412, 0.788235, 1)
+
+[node name="ProjectileSpawnLocation" type="Marker2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+script = ExtResource("3_0mc52")
+
+[node name="Laser" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_vfhpp")
+volume_db = -15.01
+
+[node name="Shields" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_ux7ps")
+volume_db = -15.01
+
+[node name="Thrusters" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_j0ddy")
+volume_db = 10.185
+bus = &"Thrusters"
+
+[node name="SideThrusters" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_j0ddy")
+volume_db = 2.143
+pitch_scale = 1.8
+bus = &"Thrusters"

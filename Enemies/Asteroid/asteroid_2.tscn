@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://cgfe1310fwphb"]
+
+[ext_resource type="Script" path="res://Enemies/Asteroid/asteroid2.gd" id="1_cvae0"]
+[ext_resource type="Script" path="res://Enemies/Asteroid/asteroid2Sprite.gd" id="2_00ptv"]
+
+[node name="asteroid2" type="RigidBody2D"]
+script = ExtResource("1_cvae0")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+centered = false
+script = ExtResource("2_00ptv")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+
+[node name="Area2D" type="Area2D" parent="."]

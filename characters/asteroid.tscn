@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://dxh3qivesuivq"]
+
+[ext_resource type="Script" path="res://scripts/asteroid.gd" id="1_7d1dy"]
+[ext_resource type="Script" path="res://scripts/asteroidSprite.gd" id="2_us6bv"]
+[ext_resource type="Script" path="res://scripts/ScreenWrapClone.gd" id="3_73m51"]
+
+[node name="asteroid" type="CharacterBody2D"]
+script = ExtResource("1_7d1dy")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = ExtResource("2_us6bv")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+
+[node name="Node" type="Node2D" parent="."]
+script = ExtResource("3_73m51")
