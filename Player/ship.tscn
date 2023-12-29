@@ -1,24 +1,40 @@
-[gd_scene load_steps=7 format=3 uid="uid://delju4rcwlhlq"]
+[gd_scene load_steps=10 format=3 uid="uid://delju4rcwlhlq"]
 
 [ext_resource type="Script" path="res://Player/ship.gd" id="1_1fjqd"]
 [ext_resource type="Script" path="res://Player/shipSprite.gd" id="2_m3aby"]
 [ext_resource type="Script" path="res://Player/shipCollision.gd" id="3_0mc52"]
+[ext_resource type="Script" path="res://Player/shieldCollision.gd" id="4_me01t"]
 [ext_resource type="AudioStream" uid="uid://c5kqfu1smyvmg" path="res://sounds/laserRetro_004.ogg" id="4_vfhpp"]
+[ext_resource type="Script" path="res://Player/shieldArea.gd" id="4_xp4d3"]
 [ext_resource type="AudioStream" uid="uid://dkdu2x82mehej" path="res://sounds/forceField_000.ogg" id="5_ux7ps"]
 [ext_resource type="AudioStream" uid="uid://dpbaq2ee7a7uq" path="res://sounds/thrusterFire_003.ogg" id="6_j0ddy"]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_01qwg"]
+
 [node name="ship" type="CharacterBody2D"]
 script = ExtResource("1_1fjqd")
+SPACE_ROTATION_FRICTION = 0.005
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 script = ExtResource("2_m3aby")
-SHIELD_COLOR = Color(0.984314, 0.141176, 0, 1)
-SHIP_COLOR = Color(0.478431, 0.529412, 0.788235, 1)
+SHIELD_COLOR = Color(0.992157, 0.576471, 0, 1)
+SHIP_COLOR = Color(0.156863, 0.941176, 0, 1)
 
 [node name="ProjectileSpawnLocation" type="Marker2D" parent="."]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(0, -16, 8, 11, 0, 6, -8, 11, 0, -16)
+one_way_collision_margin = 2.0
 script = ExtResource("3_0mc52")
+
+[node name="ShieldArea" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("4_xp4d3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShieldArea"]
+shape = SubResource("CircleShape2D_01qwg")
+script = ExtResource("4_me01t")
 
 [node name="Laser" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("4_vfhpp")

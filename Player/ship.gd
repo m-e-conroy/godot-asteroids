@@ -2,10 +2,11 @@ extends CharacterBody2D
 
 signal bullet_impact(pos)
 signal fired_projectile(pos, rot)
+signal shield_strength_change(strength)
 
 var bullet = preload("res://characters/bullet.tscn")
 
-@onready var screen_size = get_viewport_rect().size
+@onready var SCREEN_SIZE := get_viewport_rect().size
 @onready var PARENT := get_parent()
 
 @export_group('Motion Parameters')
@@ -24,11 +25,12 @@ var STOPPED := true
 # coordinates to draw shapes that represent the ship and various ship elements
 @export_group('Ship Parameters') 
 @export var PROJECTILE_LIMIT := 4
-@export var SHIELD_STRENGTH := 100
-@export var MASS := 0.0
+@export var SHIELD_STRENGTH := 100.0
+@export var MASS := 0.2
 
 var rotation_speed := 0.0
 var projectile_cnt := 0
+var previousShieldStrength := 100.0
 
 func _input(event):
 	if event.is_action_pressed("thrust"):
@@ -37,7 +39,7 @@ func _input(event):
 		TURN_LEFT = true
 	elif event.is_action_pressed("turn_right"):
 		TURN_RIGHT = true
-	elif event.is_action_pressed("shield"):
+	elif event.is_action_pressed("shield") && (SHIELD_STRENGTH > 0):
 		$Shields.play()
 		SHIELD = true
 		
@@ -57,6 +59,7 @@ func _input(event):
 func _ready():
 	$ProjectileSpawnLocation.position = Vector2(0,-20.0) # set location where the ship's bullets will appear ahead of the ship
 	
+	# when a projectile is destroyed we can now fire an additional projectile
 	if (PARENT != null) && (PARENT.has_signal("projectile_destroyed")):
 		PARENT.connect("projectile_destroyed", _on_projectile_destroyed)
 	
@@ -103,20 +106,26 @@ func _physics_process(delta):
 	rotation += rotation_speed * delta
 	
 	# wrap screen around to the other side if the player or object should fall out of bounds of the window
-	position.x = wrapf(position.x, 0, screen_size.x)
-	position.y = wrapf(position.y, 0, screen_size.y)
+	position.x = wrapf(position.x, 0, SCREEN_SIZE.x)
+	position.y = wrapf(position.y, 0, SCREEN_SIZE.y)
 	
 	var collision = move_and_collide(velocity * delta)
-	if collision:
+	if collision && (!SHIELD || (SHIELD && (SHIELD_STRENGTH <= 0))):
 		print('SHIP COLLISION')
 		print(collision.get_collider())	
 		
+	# let game know the ship's shield strength has changed
+	if previousShieldStrength != SHIELD_STRENGTH:
+		previousShieldStrength = SHIELD_STRENGTH
+		shield_strength_change.emit(SHIELD_STRENGTH)
+		
+# when a projectile is destroyed reduce the projectile's fired count so we may fire again
 func _on_projectile_destroyed():
 	projectile_cnt -= 1
 	
-func bulletImpact(pos):
+#func bulletImpact(pos):
 	#bullet_cnt -= 1
-	bullet_impact.emit(pos)
+#	bullet_impact.emit(pos)
 	
 #func fire(pos, rot):
 #	if bullet_cnt < bullet_limit:

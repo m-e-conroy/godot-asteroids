@@ -3,7 +3,7 @@ extends Node2D
 @onready var screen_size = get_viewport_rect().size
 
 var bullet = preload("res://characters/bullet.tscn")
-var asteroidScn = preload("res://characters/asteroid_2.tscn")
+var asteroidScn = preload("res://Enemies/Asteroid/asteroid_2.tscn")
 var rock_crash = preload("res://effects/rock_crash.tscn")
 
 var rnd = RandomNumberGenerator.new()
@@ -33,7 +33,7 @@ func generateAsteroids():
 	var n = rnd.randi_range(3,6)
 	
 	for i in n:
-		var a := asteroidScn.instantiate()
+		var a = asteroidScn.instantiate()
 		a.size = sizes[rnd.randi_range(0,2)]
 		a.position = Vector2(rnd.randi_range(0, screen_size.x), rnd.randi_range(0, screen_size.y))
 		a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())
@@ -48,7 +48,7 @@ func asteroidDestroyed(pos, size):
 			match rnd.randi_range(0,2):
 				0:
 					for i in 4:
-						var a := asteroidScn.instantiate()
+						var a = asteroidScn.instantiate()
 						a.size = 'sm'
 						a.position = pos
 						a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())
@@ -57,7 +57,7 @@ func asteroidDestroyed(pos, size):
 						a.connect("destroyed", asteroidDestroyed)
 				1:
 					for i in 2:
-						var a := asteroidScn.instantiate()
+						var a = asteroidScn.instantiate()
 						a.size = 'sm'
 						a.position = pos
 						a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())
@@ -65,7 +65,7 @@ func asteroidDestroyed(pos, size):
 						add_child(a)
 						a.connect("destroyed", asteroidDestroyed)
 					
-					var a := asteroidScn.instantiate()
+					var a = asteroidScn.instantiate()
 					a.size = 'md'
 					a.position = pos
 					a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())
@@ -74,7 +74,7 @@ func asteroidDestroyed(pos, size):
 					a.connect("destroyed", asteroidDestroyed)
 				2:
 					for i in 2:
-						var a := asteroidScn.instantiate()
+						var a = asteroidScn.instantiate()
 						a.size = 'md'
 						a.position = pos
 						a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())
@@ -84,7 +84,8 @@ func asteroidDestroyed(pos, size):
 		'md': # break into 2 or 3 small ones
 			var num := rnd.randi_range(2,3)
 			for i in num:
-				var a := asteroidScn.instantiate()
+				var a = asteroidScn.instantiate()
+				
 				a.size = 'sm'
 				a.position = pos
 				a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())

@@ -7,5 +7,8 @@
 script = ExtResource("1_ecl8k")
 
 [node name="player" parent="." instance=ExtResource("2_shaui")]
+z_index = 10
 position = Vector2(515, 322)
 ACCELERATION = 30.0
+SPACE_ROTATION_FRICTION = 0.025
+SHIELD_STRENGTH = 10.0
