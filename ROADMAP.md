@@ -20,8 +20,8 @@
   - Wave-scaled attack patterns (sweeping laser beams, bullet curtains, drone bays).
   - Dedicated Boss HP bar in HUD.
 
-## Phase 3: Wave Mutators & Cosmic Hazards
-- [ ] **Comet**: High-velocity icy vector streak crossing the sector with debris tail.
-- [ ] **Pulsar**: Rotating neutron star emitting periodic sweeping energy beams.
-- [ ] **Black Hole**: Gravitational singularity warping ship, bullet, and asteroid trajectories.
-- [ ] **Wave Mutator Banner**: Announces active sector anomalies (e.g., `ANOMALY: GRAVITY WELL`, `ALERT: DRONE SWARM`).
+## Phase 3: Wave Mutators & Cosmic Hazards (Completed)
+- [x] **Comet**: High-velocity icy vector streak crossing the sector with debris tail.
+- [x] **Pulsar**: Rotating neutron star emitting periodic sweeping energy beams.
+- [x] **Black Hole**: Gravitational singularity warping ship, bullet, and asteroid trajectories.
+- [x] **Wave Mutator Banner**: Announces active sector anomalies (e.g., `ANOMALY: GRAVITY WELL`, `ALERT: DRONE SWARM`).

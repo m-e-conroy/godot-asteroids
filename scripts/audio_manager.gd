@@ -13,6 +13,9 @@ var bonus_life_stream: AudioStreamWAV = null
 var emp_stream: AudioStreamWAV = null
 var wave_clear_stream: AudioStreamWAV = null
 var game_over_stream: AudioStreamWAV = null
+var explosion_small_stream: AudioStreamWAV = null
+var explosion_big_stream: AudioStreamWAV = null
+var mutator_stream: AudioStreamWAV = null
 
 var heartbeat_active: bool = false
 var heartbeat_timer: float = 0.0
@@ -84,6 +87,12 @@ static func play_wave_clear(tree: SceneTree):
 static func play_game_over(tree: SceneTree):
 	_call_play(tree, "_play_game_over")
 
+static func play_explosion(tree: SceneTree, big: bool = false):
+	_call_play(tree, "_play_explosion_big" if big else "_play_explosion_small")
+
+static func play_mutator_alert(tree: SceneTree):
+	_call_play(tree, "_play_mutator_alert")
+
 static func _call_play(tree: SceneTree, method_name: String):
 	if tree == null:
 		return
@@ -105,6 +114,15 @@ func _play_wave_clear():
 
 func _play_game_over():
 	_play_stream(game_over_stream, -2.0)
+
+func _play_explosion_small():
+	_play_stream(explosion_small_stream, -3.5)
+
+func _play_explosion_big():
+	_play_stream(explosion_big_stream, -1.0)
+
+func _play_mutator_alert():
+	_play_stream(mutator_stream, -3.0)
 
 func _play_stream(stream: AudioStream, vol_db: float = 0.0):
 	if stream == null:
@@ -131,6 +149,9 @@ func _synthesize_all_sounds():
 	wave_clear_stream = _make_arpeggio([440.0, 554.37, 659.25, 880.0], 0.075, 0.38, "triangle")
 	game_over_stream = _make_arpeggio([440.0, 392.0, 349.23, 293.66], 0.16, 0.45, "saw")
 	emp_stream = _make_emp_boom(0.55)
+	explosion_small_stream = _make_arcade_explosion(0.36, 2200.0, 240.0, 145.0, 0.72)
+	explosion_big_stream = _make_arcade_explosion(0.82, 2600.0, 150.0, 125.0, 0.88)
+	mutator_stream = _make_arpeggio([220.0, 311.13, 466.16, 311.13, 622.25], 0.075, 0.36, "triangle")
 
 func _make_tone_sweep(f_start: float, f_end: float, duration: float, amp: float, wave: String) -> AudioStreamWAV:
 	var n: int = int(SAMPLE_RATE * duration)
@@ -176,6 +197,35 @@ func _make_emp_boom(duration: float) -> AudioStreamWAV:
 		var bass: float = sin(phase) * 0.75
 		var noise: float = randf_range(-1.0, 1.0) * 0.25 * (1.0 - t)
 		var sample: float = (bass + noise) * env * 0.7
+		data.encode_s16(i * 2, int(clamp(sample, -1.0, 1.0) * 32767.0))
+	return _build_wav(data)
+
+func _make_arcade_explosion(duration: float, cutoff_start: float, cutoff_end: float, sub_start: float, gain: float) -> AudioStreamWAV:
+	var n: int = int(SAMPLE_RATE * duration)
+	var data := PackedByteArray()
+	data.resize(n * 2)
+	var phase: float = 0.0
+	var lp_state: float = 0.0
+	var held_noise: float = 0.0
+	for i in range(n):
+		var t: float = float(i) / float(n)
+		# Sub-bass impact punch
+		var sub_freq: float = lerpf(sub_start, 28.0, min(t * 2.4, 1.0))
+		phase += (TAU * sub_freq) / float(SAMPLE_RATE)
+		var sub_env: float = exp(-t * 5.0)
+		var sub: float = sin(phase) * sub_env * 0.55
+		
+		# Stepped retro noise + sweeping 1-pole low-pass filter
+		if i % 3 == 0:
+			held_noise = randf_range(-1.0, 1.0)
+		var cutoff: float = lerpf(cutoff_start, cutoff_end, sqrt(t))
+		var alpha: float = clamp((TAU * cutoff) / (TAU * cutoff + float(SAMPLE_RATE)), 0.01, 0.99)
+		lp_state = lp_state + alpha * (held_noise - lp_state)
+		
+		var rumble_env: float = pow(1.0 - t, 1.55)
+		var sample: float = (sub + lp_state * rumble_env * 0.95) * gain
+		# Soft saturation for analog punch
+		sample = tanh(sample * 1.4)
 		data.encode_s16(i * 2, int(clamp(sample, -1.0, 1.0) * 32767.0))
 	return _build_wav(data)
 

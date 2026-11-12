@@ -27,6 +27,8 @@ extends CanvasLayer
 @onready var go_new_high_label = $GameOverOverlay/VBox/NewHighLabel
 @onready var go_timeout_label = $GameOverOverlay/VBox/TimeoutLabel
 @onready var wave_announce_label = $WaveAnnounceLabel
+@onready var mutator_announce_label = $MutatorAnnounceLabel
+@onready var mutator_badge_label = $MutatorBadgeLabel
 
 var current_lives: int = 3
 var current_high_score: int = 0
@@ -45,6 +47,8 @@ func _ready():
 	combo_panel.visible = false
 	boss_panel.visible = false
 	wave_announce_label.visible = false
+	mutator_announce_label.visible = false
+	mutator_badge_label.visible = false
 	$GameOverOverlay/VBox/RestartPrompt.visible = false
 
 func connect_score_manager(score_mgr: Node):
@@ -211,3 +215,25 @@ func update_boss_hp(hp: int, max_hp: int, b_name: String):
 func hide_boss_bar():
 	if boss_panel != null:
 		boss_panel.visible = false
+
+func announce_mutator(title: String, col: Color = COLOR_MAGENTA):
+	if mutator_announce_label != null:
+		mutator_announce_label.text = title
+		mutator_announce_label.add_theme_color_override("font_color", col)
+		mutator_announce_label.visible = true
+		mutator_announce_label.modulate.a = 1.0
+		var tween = create_tween()
+		tween.tween_property(mutator_announce_label, "scale", Vector2(1.12, 1.12), 0.25).from(Vector2(0.85, 0.85))
+		tween.tween_interval(1.6)
+		tween.tween_property(mutator_announce_label, "modulate:a", 0.0, 0.6)
+		tween.tween_callback(func(): mutator_announce_label.visible = false)
+	if mutator_badge_label != null:
+		mutator_badge_label.text = title
+		mutator_badge_label.add_theme_color_override("font_color", Color(col.r, col.g, col.b, 0.85))
+		mutator_badge_label.visible = true
+
+func clear_mutator():
+	if mutator_announce_label != null:
+		mutator_announce_label.visible = false
+	if mutator_badge_label != null:
+		mutator_badge_label.visible = false

@@ -10,6 +10,10 @@ var rock_crash = preload("res://effects/rock_crash.tscn")
 var ship_explosion_scene = preload("res://effects/ship_explosion.tscn")
 var saucer_scene = preload("res://Enemies/Saucer/saucer.tscn")
 var boss_scene = preload("res://Enemies/Boss/procedural_boss.tscn")
+var comet_scene = preload("res://Enemies/Hazards/comet.tscn")
+var pulsar_scene = preload("res://Enemies/Hazards/pulsar.tscn")
+var black_hole_scene = preload("res://Enemies/Hazards/black_hole.tscn")
+var drone_scene = preload("res://Enemies/Drone/drone.tscn")
 var hud_scene = preload("res://ui/hud.tscn")
 var welcome_screen_scene = preload("res://ui/welcome_screen.tscn")
 var pause_menu_scene = preload("res://ui/pause_menu.tscn")
@@ -24,6 +28,11 @@ var rnd = RandomNumberGenerator.new()
 
 enum GameState { WELCOME, PLAYING, GAME_OVER }
 var game_state: GameState = GameState.WELCOME
+
+enum WaveMutator { NONE, GRAVITY_WELL, PULSAR_CORE, COMET_TRANSIT, DRONE_SWARM, HYPER_DRIFT }
+var active_mutator: WaveMutator = WaveMutator.NONE
+var last_mutator: WaveMutator = WaveMutator.NONE
+var comet_spawn_timer: float = 0.0
 
 var clones: Dictionary = {}
 var current_wave: int = 1
@@ -119,6 +128,7 @@ func _on_welcome_launch():
 func start_game():
 	for a in get_tree().get_nodes_in_group("asteroids"):
 		a.queue_free()
+	_clear_hazards()
 		
 	game_state = GameState.PLAYING
 	if hud != null:
@@ -148,6 +158,7 @@ func return_to_welcome():
 		pu.queue_free()
 	for a in get_tree().get_nodes_in_group("asteroids"):
 		a.queue_free()
+	_clear_hazards()
 		
 	if hud != null:
 		hud.visible = false
@@ -211,6 +222,13 @@ func _process(delta):
 		if active_saucers < max_saucers:
 			spawn_saucer()
 		saucer_spawn_timer = rnd.randf_range(18.0, 26.0)
+		
+	if active_mutator == WaveMutator.COMET_TRANSIT:
+		if not _has_active_comet():
+			comet_spawn_timer -= delta
+			if comet_spawn_timer <= 0.0:
+				_spawn_comet()
+				comet_spawn_timer = rnd.randf_range(5.0, 7.5)
 
 func spawn_saucer():
 	var s = saucer_scene.instantiate()
@@ -230,21 +248,134 @@ func randomPosNegOne():
 		return 1
 
 func generateAsteroids():
+	_clear_hazards()
 	var is_boss_wave: bool = (current_wave % 5 == 0)
+	var mutator: WaveMutator = WaveMutator.NONE
+	if not is_boss_wave and current_wave >= 2:
+		var trigger_chance: float = 1.0 if current_wave == 2 else 0.8
+		if rnd.randf() <= trigger_chance:
+			mutator = _pick_wave_mutator()
+	active_mutator = mutator
+	
 	var sizes = ['lg','md','sm','xs']
 	var n = 3 if is_boss_wave else min(10, rnd.randi_range(4, 6) + current_wave - 1)
+	var speed_mult: float = 1.65 if active_mutator == WaveMutator.HYPER_DRIFT else 1.0
 	
 	for i in n:
 		var a = asteroidScn.instantiate()
 		a.SIZE = sizes[rnd.randi_range(1, 2)] if is_boss_wave else sizes[rnd.randi_range(0,3)]
 		a.position = Vector2(rnd.randi_range(0, screen_size.x), rnd.randi_range(0, screen_size.y))
-		a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())
-		a.angular_velocity = (randomPosNegOne() * rnd.randi_range(1,45)) * PI / 180
+		a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne()) * speed_mult
+		a.angular_velocity = (randomPosNegOne() * rnd.randi_range(1,45)) * PI / 180 * speed_mult
 		add_child(a)
 		a.connect("destroyed", asteroidDestroyed)
 		
 	if is_boss_wave:
 		spawn_boss(max(1, current_wave / 5))
+	elif active_mutator != WaveMutator.NONE:
+		_activate_mutator(active_mutator)
+
+func _clear_hazards():
+	active_mutator = WaveMutator.NONE
+	comet_spawn_timer = 0.0
+	for h in get_tree().get_nodes_in_group("hazards"):
+		if is_instance_valid(h):
+			h.queue_free()
+	if hud != null and hud.has_method("clear_mutator"):
+		hud.clear_mutator()
+
+func _pick_wave_mutator() -> WaveMutator:
+	var pool: Array[WaveMutator] = [
+		WaveMutator.GRAVITY_WELL,
+		WaveMutator.PULSAR_CORE,
+		WaveMutator.COMET_TRANSIT,
+		WaveMutator.DRONE_SWARM,
+		WaveMutator.HYPER_DRIFT,
+	]
+	if last_mutator in pool and pool.size() > 1:
+		pool.erase(last_mutator)
+	var chosen: WaveMutator = pool[rnd.randi_range(0, pool.size() - 1)]
+	last_mutator = chosen
+	return chosen
+
+func _find_safe_hazard_pos(margin: float = 160.0, min_player_dist: float = 220.0) -> Vector2:
+	var player_pos: Vector2 = $player.global_position if has_node("player") else screen_size * 0.5
+	var best_pos := Vector2(screen_size.x * 0.25, screen_size.y * 0.35)
+	for _attempt in range(12):
+		var candidate := Vector2(
+			rnd.randf_range(margin, max(margin + 20.0, screen_size.x - margin)),
+			rnd.randf_range(margin, max(margin + 20.0, screen_size.y - margin))
+		)
+		if candidate.distance_to(player_pos) >= min_player_dist:
+			return candidate
+	return best_pos
+
+func _activate_mutator(mutator: WaveMutator):
+	var title := ""
+	var col := Color(1.0, 0.35, 0.85)
+	match mutator:
+		WaveMutator.GRAVITY_WELL:
+			title = "ANOMALY: GRAVITY WELL"
+			col = Color(0.85, 0.3, 1.0)
+			var bh = black_hole_scene.instantiate()
+			bh.global_position = _find_safe_hazard_pos(170.0, 230.0)
+			add_child(bh)
+		WaveMutator.PULSAR_CORE:
+			title = "ANOMALY: PULSAR CORE"
+			col = Color(1.0, 0.25, 0.85)
+			var pulsar = pulsar_scene.instantiate()
+			pulsar.global_position = _find_safe_hazard_pos(150.0, 220.0)
+			add_child(pulsar)
+		WaveMutator.COMET_TRANSIT:
+			title = "ALERT: COMET TRANSIT"
+			col = Color(0.35, 0.92, 1.0)
+			comet_spawn_timer = 1.6
+		WaveMutator.DRONE_SWARM:
+			title = "ALERT: DRONE SWARM"
+			col = Color(1.0, 0.6, 0.15)
+			var drone_count: int = 2 + min(2, int(current_wave / 3))
+			for _i in range(drone_count):
+				_spawn_edge_drone()
+		WaveMutator.HYPER_DRIFT:
+			title = "ANOMALY: HYPER-DRIFT"
+			col = Color(1.0, 0.85, 0.2)
+	if title != "" and hud != null and hud.has_method("announce_mutator"):
+		hud.announce_mutator(title, col)
+	audio_manager_script.play_mutator_alert(get_tree())
+
+func _has_active_comet() -> bool:
+	for c in get_tree().get_nodes_in_group("comets"):
+		if is_instance_valid(c) and !c.is_queued_for_deletion():
+			return true
+	return false
+
+func _spawn_comet():
+	if _has_active_comet():
+		return
+	var c = comet_scene.instantiate()
+	var from_left: bool = rnd.randf() > 0.5
+	var start_x: float = -80.0 if from_left else screen_size.x + 80.0
+	var end_x: float = screen_size.x + 120.0 if from_left else -120.0
+	var start_y: float = rnd.randf_range(80.0, screen_size.y - 80.0)
+	var end_y: float = clamp(start_y + rnd.randf_range(-220.0, 220.0), 60.0, screen_size.y - 60.0)
+	add_child(c)
+	c.setup_transit(Vector2(start_x, start_y), Vector2(end_x, end_y), rnd.randf_range(380.0, 460.0))
+
+func _spawn_edge_drone():
+	var d = drone_scene.instantiate()
+	var side: int = rnd.randi_range(0, 3)
+	var pos := Vector2.ZERO
+	match side:
+		0:
+			pos = Vector2(rnd.randf_range(40.0, screen_size.x - 40.0), -25.0)
+		1:
+			pos = Vector2(rnd.randf_range(40.0, screen_size.x - 40.0), screen_size.y + 25.0)
+		2:
+			pos = Vector2(-25.0, rnd.randf_range(40.0, screen_size.y - 40.0))
+		_:
+			pos = Vector2(screen_size.x + 25.0, rnd.randf_range(40.0, screen_size.y - 40.0))
+	d.global_position = pos
+	add_child(d)
 
 func spawn_boss(tier: int):
 	var b = boss_scene.instantiate()
@@ -322,6 +453,7 @@ func asteroidDestroyed(pos, size):
 	showAsteroidExplosion(pos)
 	vector_shrapnel_script.spawn(self, pos, Color(0.7, 0.95, 0.78), 7, 1.1)
 	if game_state == GameState.PLAYING:
+		audio_manager_script.play_explosion(get_tree(), false)
 		var shake_amt := 0.12
 		if size == 'lg':
 			shake_amt = 0.28
@@ -395,6 +527,7 @@ func restart_game():
 		pu.queue_free()
 	for a in get_tree().get_nodes_in_group("asteroids"):
 		a.queue_free()
+	_clear_hazards()
 		
 	current_wave = 1
 	saucer_spawn_timer = 8.0

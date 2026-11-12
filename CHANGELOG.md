@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-11-12
+
+### Added
+- **Wave Mutators & Cosmic Hazards (`Enemies/Hazards/`, `scripts/null_sector.gd`)**:
+  - **Comet (`comet.tscn`, `comet.gd`)**: High-velocity icy vector streak with ion tail and frost sparks; limited to one active comet at a time, mutually destroys asteroids on impact, and shatters for `+500` pts + guaranteed power-up when shot down (`8` HP).
+  - **Pulsar (`pulsar.tscn`, `pulsar.gd`)**: Rotating neutron star cycling through cooldown, dashed telegraph warning, and sweeping twin plasma beams.
+  - **Black Hole (`black_hole.tscn`, `black_hole.gd`)**: Gravitational singularity with swirling accretion disk warping ship, bullet, and asteroid trajectories.
+  - **Wave Mutator System & HUD Banner (`ui/hud.tscn`, `scripts/hud.gd`, `scripts/audio_manager.gd`)**: Wave 2+ anomaly rotation (`GRAVITY WELL`, `PULSAR CORE`, `COMET TRANSIT`, `DRONE SWARM`, `HYPER-DRIFT`) with animated banner, persistent status badge, and synth alert cue.
+- **Synthesized Arcade Explosions (`scripts/audio_manager.gd`)**:
+  - Pre-synthesized `explosion_small_stream` and `explosion_big_stream` (`AudioStreamWAV`) using sweeping low-pass filtered noise, sub-bass punch, and `tanh` saturation, wired across asteroids, ship deaths, saucers, comets, and bosses.
+- **Welcome Screen Intel Browser Card 4 (`ui/attract_carousel.gd`)**:
+  - Added Sector Anomalies & Wave Mutators dossier card with animated vector icons.
+
+### Fixed
+- **Welcome Screen Threat Dossier Alignment (`ui/attract_carousel.gd`)**:
+  - Centered the two-column Threat Dossier & Bounties layout symmetrically around `center.x`.
+
 ## [1.4.0] - 2026-11-12
 
 ### Added

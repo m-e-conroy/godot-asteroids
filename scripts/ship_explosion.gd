@@ -45,8 +45,9 @@ func _ready():
 	
 	if has_node("Particles"):
 		$Particles.emitting = true
-	if has_node("Boom"):
-		$Boom.play()
+	var am = load("res://scripts/audio_manager.gd")
+	if am != null:
+		am.play_explosion(get_tree(), true)
 
 func _process(delta):
 	elapsed_time += delta

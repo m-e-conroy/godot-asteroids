@@ -3,7 +3,7 @@ extends Control
 
 signal card_changed(card_index: int)
 
-enum Card { THREATS, CONTROLS, UPGRADES }
+enum Card { THREATS, CONTROLS, UPGRADES, MUTATORS }
 
 @export var current_card: Card = Card.THREATS:
 	set(val):
@@ -46,11 +46,13 @@ func _process(delta: float):
 
 func next_card():
 	timer = 0.0
-	current_card = ((current_card + 1) % 3) as Card
+	var count: int = Card.size()
+	current_card = ((current_card + 1) % count) as Card
 
 func prev_card():
 	timer = 0.0
-	current_card = ((current_card + 2) % 3) as Card
+	var count: int = Card.size()
+	current_card = ((current_card + count - 1) % count) as Card
 
 func _gui_input(event: InputEvent):
 	if event is InputEventKey and event.pressed and not event.is_echo():
@@ -73,6 +75,8 @@ func _draw():
 			_draw_flight_manual(center, font)
 		Card.UPGRADES:
 			_draw_upgrades_arsenal(center, font)
+		Card.MUTATORS:
+			_draw_wave_mutators(center, font)
 			
 	# Draw navigation pips and card switcher at bottom
 	if show_nav_pips:
@@ -87,8 +91,8 @@ func _draw_threat_dossier(center: Vector2, font: Font):
 		var t_size = font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
 		draw_string(font, Vector2(center.x - t_size.x / 2.0, 24.0), title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, COLOR_CYAN)
 
-	var col1_x = center.x - 220.0
-	var col2_x = center.x + 80.0
+	var col1_x = center.x - 258.0
+	var col2_x = center.x + 17.0
 	var start_y = 65.0
 	var row_h = 38.0
 
@@ -305,14 +309,98 @@ func _draw_powerup_icon(pos: Vector2, icon_type: String, col: Color):
 			draw_circle(pos, 2.5, Color.WHITE)
 
 # ==============================================================================
+# CARD 4: SECTOR ANOMALIES & WAVE MUTATORS
+# ==============================================================================
+func _draw_wave_mutators(center: Vector2, font: Font):
+	var title_text = "--- SECTOR ANOMALIES & WAVE MUTATORS (WAVE 2+) ---"
+	if font != null:
+		var t_size = font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+		draw_string(font, Vector2(center.x - t_size.x / 2.0, 24.0), title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, COLOR_CYAN)
+
+	var items = [
+		{
+			"title": "ANOMALY: GRAVITY WELL",
+			"desc": "Singularity warps ship, bullet & rock trajectories (event horizon lethal)",
+			"color": Color(0.85, 0.3, 1.0),
+			"icon": "black_hole"
+		},
+		{
+			"title": "ANOMALY: PULSAR CORE",
+			"desc": "Rotating neutron star sweeps twin plasma beams after warning lock",
+			"color": Color(1.0, 0.25, 0.85),
+			"icon": "pulsar"
+		},
+		{
+			"title": "ALERT: COMET TRANSIT",
+			"desc": "High-velocity icy comets streak across sector; shatter for +500 & pickup",
+			"color": Color(0.35, 0.92, 1.0),
+			"icon": "comet"
+		},
+		{
+			"title": "ALERT: DRONE SWARM",
+			"desc": "Extra hunter-killer delta drones warp in from the sector perimeter",
+			"color": Color(1.0, 0.6, 0.15),
+			"icon": "swarm"
+		},
+		{
+			"title": "ANOMALY: HYPER-DRIFT",
+			"desc": "Unstable subspace currents accelerate all asteroids by 1.65x",
+			"color": COLOR_GOLD,
+			"icon": "hyper"
+		}
+	]
+
+	var start_y = 50.0
+	var card_w = 500.0
+	var row_h = 37.0
+
+	for i in range(items.size()):
+		var item = items[i]
+		var y = start_y + i * row_h
+		var box_x = center.x - card_w / 2.0
+
+		var icon_pos = Vector2(box_x + 22.0, y + 14.0)
+		_draw_mutator_icon(icon_pos, item["icon"], item["color"])
+
+		if font != null:
+			draw_string(font, Vector2(box_x + 56.0, y + 10.0), item["title"], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, item["color"])
+			draw_string(font, Vector2(box_x + 56.0, y + 25.0), item["desc"], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.85, 0.85, 0.85, 0.8))
+
+func _draw_mutator_icon(pos: Vector2, icon_type: String, col: Color):
+	var rot = anim_time * 1.6
+	match icon_type:
+		"black_hole":
+			draw_circle(pos, 5.5, Color.BLACK)
+			draw_arc(pos, 6.0, 0.0, TAU, 16, col, 1.5)
+			draw_arc(pos, 10.5, rot, rot + PI * 0.85, 12, Color(1.0, 0.35, 0.45, 0.85), 1.3)
+			draw_arc(pos, 10.5, rot + PI, rot + PI * 1.85, 12, Color(1.0, 0.35, 0.45, 0.85), 1.3)
+		"pulsar":
+			var dir = Vector2.RIGHT.rotated(rot * 0.8)
+			draw_line(pos - dir * 13.0, pos + dir * 13.0, Color(col.r, col.g, col.b, 0.75), 2.0)
+			draw_circle(pos, 4.5, Color.WHITE)
+			draw_arc(pos, 7.5, 0.0, TAU, 16, col, 1.3)
+		"comet":
+			draw_line(pos + Vector2(-11, 5), pos + Vector2(4, -3), Color(col.r, col.g, col.b, 0.55), 4.0)
+			draw_line(pos + Vector2(-9, 4), pos + Vector2(4, -3), Color.WHITE, 1.5)
+			draw_circle(pos + Vector2(5, -3), 3.5, Color(0.85, 0.98, 1.0))
+		"swarm":
+			for offset in [Vector2(-5, -2), Vector2(5, 3)]:
+				var p = pos + offset
+				draw_polyline(PackedVector2Array([p + Vector2(0, -5), p + Vector2(-4, 4), p + Vector2(4, 4), p + Vector2(0, -5)]), col, 1.3, true)
+		"hyper":
+			draw_polyline(PackedVector2Array([pos + Vector2(-7, -5), pos + Vector2(-1, 0), pos + Vector2(-7, 5)]), col, 1.6)
+			draw_polyline(PackedVector2Array([pos + Vector2(1, -5), pos + Vector2(7, 0), pos + Vector2(1, 5)]), col, 1.6)
+
+# ==============================================================================
 # NAVIGATION PIPS & BROWSER HELPER
 # ==============================================================================
 func _draw_navigation_pips(center: Vector2, font: Font):
 	var pips_y = size.y - 18.0
 	var pip_spacing = 18.0
-	var start_x = center.x - (pip_spacing * 2) / 2.0
+	var count: int = Card.size()
+	var start_x = center.x - (pip_spacing * (count - 1)) / 2.0
 	
-	for i in range(3):
+	for i in range(count):
 		var p_pos = Vector2(start_x + i * pip_spacing, pips_y)
 		if i == current_card:
 			draw_circle(p_pos, 4.0, COLOR_GREEN)

@@ -226,13 +226,9 @@ func destroy():
 			sm.add_score(score_value, global_position)
 			
 		# Explosion SFX
-		var sfx = AudioStreamPlayer2D.new()
-		sfx.stream = explosion_sound
-		sfx.volume_db = -1.0
-		sfx.global_position = global_position
-		parent_node.add_child(sfx)
-		sfx.play()
-		sfx.finished.connect(sfx.queue_free)
+		var am = load("res://scripts/audio_manager.gd")
+		if am != null:
+			am.play_explosion(get_tree(), true)
 		
 		# Massive Shrapnel & Camera Shake
 		var shrapnel = load("res://effects/vector_shrapnel.gd")

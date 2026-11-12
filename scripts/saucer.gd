@@ -205,14 +205,10 @@ func destroy():
 		if sm != null:
 			sm.add_score(300, global_position)
 			
-		# Play authentic explosion audio
-		var sfx = AudioStreamPlayer2D.new()
-		sfx.stream = explosion_sound
-		sfx.volume_db = -4.0
-		sfx.global_position = global_position
-		parent_node.add_child(sfx)
-		sfx.play()
-		sfx.finished.connect(sfx.queue_free)
+		# Play synthesized arcade explosion audio
+		var am = load("res://scripts/audio_manager.gd")
+		if am != null:
+			am.play_explosion(get_tree(), true)
 		
 		# Spawn particle crash explosion
 		var crash = rock_crash_scene.instantiate()
