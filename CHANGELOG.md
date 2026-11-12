@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented `STATE_WELCOME` -> `STATE_PLAYING` -> `STATE_GAMEOVER` in `scripts/asteroid_tests.gd`.
   - Ambient drifting asteroids populate the background during attract mode.
   - 0.35s radial hyperspace warp transition seamlessly clears the welcome screen and initializes the player at screen center with protective shield flare.
-  - Pressing `ESC` during Game Over returns cleanly to the Welcome Screen.
+  - Pressing `ESC` during Game Over returns cleanly to the Welcome Screen, or automatically returns after 10 seconds of inactivity with a live countdown.
 - **Retro Digital Clock HUD System**:
   - Procedural 7-segment digital display (`ui/digital_display.gd`) featuring bright phosphor green lit numerals and faint unlit ghost segments (`888888`), customizable slant, thickness, and zero-padding.
   - Top Bar displaying lives, 6-digit score, 6-digit persistent high score, and 2-digit wave counter.

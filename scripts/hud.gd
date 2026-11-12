@@ -17,6 +17,7 @@ extends CanvasLayer
 @onready var go_final_score = $GameOverOverlay/VBox/ScoreBox/FinalScoreDisplay
 @onready var go_high_score = $GameOverOverlay/VBox/HighScoreBox/HighDisplay
 @onready var go_new_high_label = $GameOverOverlay/VBox/NewHighLabel
+@onready var go_timeout_label = $GameOverOverlay/VBox/TimeoutLabel
 @onready var wave_announce_label = $WaveAnnounceLabel
 
 var current_lives: int = 3
@@ -168,3 +169,8 @@ func hide_game_over():
 	show_restart_prompt = false
 	var prompt = $GameOverOverlay/VBox/RestartPrompt
 	prompt.visible = false
+
+func set_game_over_countdown(seconds_left: float):
+	if go_timeout_label != null:
+		var secs: int = max(0, ceili(seconds_left))
+		go_timeout_label.text = "RETURNING TO BRIEFING IN %ds" % secs

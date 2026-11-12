@@ -25,6 +25,8 @@ var score_manager: Node = null
 var hud: CanvasLayer = null
 var welcome_screen: CanvasLayer = null
 var can_restart: bool = false
+var game_over_return_timer: float = 0.0
+const GAME_OVER_TIMEOUT: float = 10.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -115,6 +117,14 @@ func _input(event):
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if game_state == GameState.GAME_OVER:
+		game_over_return_timer -= delta
+		if hud != null:
+			hud.set_game_over_countdown(game_over_return_timer)
+		if game_over_return_timer <= 0.0:
+			return_to_welcome()
+		return
+		
 	if game_state != GameState.PLAYING:
 		return
 		
@@ -268,6 +278,9 @@ func _on_player_ship_destroyed(pos: Vector2):
 		get_tree().create_timer(2.0).timeout.connect(_respawn_player)
 	else:
 		game_state = GameState.GAME_OVER
+		game_over_return_timer = GAME_OVER_TIMEOUT
+		if hud != null:
+			hud.set_game_over_countdown(game_over_return_timer)
 		can_restart = false
 		get_tree().create_timer(1.0).timeout.connect(func(): can_restart = true)
 

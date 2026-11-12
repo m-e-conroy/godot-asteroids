@@ -305,3 +305,10 @@ theme_override_font_sizes/font_size = 16
 text = "PRESS ENTER OR 'R' TO PLAY AGAIN"
 horizontal_alignment = 1
 
+[node name="TimeoutLabel" type="Label" parent="GameOverOverlay/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 0.65)
+theme_override_font_sizes/font_size = 11
+text = "RETURNING TO BRIEFING IN 10s"
+horizontal_alignment = 1
+
