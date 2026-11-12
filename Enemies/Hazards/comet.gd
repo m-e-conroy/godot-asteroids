@@ -164,14 +164,9 @@ func _shatter(award_player: bool):
 		if cam_shake != null:
 			cam_shake.shake(get_tree(), 0.35)
 			
-		if rock_crash_scene != null:
-			var crash = rock_crash_scene.instantiate()
-			crash.global_position = global_position
-			var particles = crash.get_child(0)
-			particles.amount = 36
-			particles.color = COLOR_ICE_CORE
-			parent_node.add_child(crash)
-			particles.emitting = true
+		var impact_fx = load("res://effects/impact_fx.gd")
+		if impact_fx != null:
+			impact_fx.spawn_comet_shatter(parent_node, global_position)
 			
 	shattered.emit(global_position)
 	queue_free()

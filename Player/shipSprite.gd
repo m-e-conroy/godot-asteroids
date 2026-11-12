@@ -41,6 +41,14 @@ func _draw():
 	draw_polyline(PackedVector2Array(SHIP_SHAPE), Color(SHIP_COLOR.r, SHIP_COLOR.g, SHIP_COLOR.b, 0.35), 4.5)
 	draw_polyline(PackedVector2Array(SHIP_SHAPE), SHIP_COLOR, 2.0)
 
+	# 2a. Draw salvaged Twin Parallel Gun pods
+	if "salvage_twin_guns" in PARENT and PARENT.salvage_twin_guns >= 1:
+		var gun_col := Color(1.0, 0.72, 0.15)
+		draw_line(Vector2(-7, 2), Vector2(-7, -14), gun_col, 2.0)
+		draw_line(Vector2(7, 2), Vector2(7, -14), gun_col, 2.0)
+		if PARENT.salvage_twin_guns >= 2:
+			draw_line(Vector2(0, -10), Vector2(0, -19), Color(1.0, 0.9, 0.4), 2.0)
+
 	# 2b. Draw weapon mode visual enhancements
 	if "weapon_mode" in PARENT:
 		match PARENT.weapon_mode:

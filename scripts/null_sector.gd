@@ -14,6 +14,7 @@ var comet_scene = preload("res://Enemies/Hazards/comet.tscn")
 var pulsar_scene = preload("res://Enemies/Hazards/pulsar.tscn")
 var black_hole_scene = preload("res://Enemies/Hazards/black_hole.tscn")
 var drone_scene = preload("res://Enemies/Drone/drone.tscn")
+var derelict_ship_scene = preload("res://Pickups/derelict_ship.tscn")
 var hud_scene = preload("res://ui/hud.tscn")
 var welcome_screen_scene = preload("res://ui/welcome_screen.tscn")
 var pause_menu_scene = preload("res://ui/pause_menu.tscn")
@@ -33,6 +34,7 @@ enum WaveMutator { NONE, GRAVITY_WELL, PULSAR_CORE, COMET_TRANSIT, DRONE_SWARM, 
 var active_mutator: WaveMutator = WaveMutator.NONE
 var last_mutator: WaveMutator = WaveMutator.NONE
 var comet_spawn_timer: float = 0.0
+var derelict_spawn_timer: float = 34.0
 
 var clones: Dictionary = {}
 var current_wave: int = 1
@@ -229,6 +231,12 @@ func _process(delta):
 			if comet_spawn_timer <= 0.0:
 				_spawn_comet()
 				comet_spawn_timer = rnd.randf_range(5.0, 7.5)
+				
+	if not _has_active_salvage():
+		derelict_spawn_timer -= delta
+		if derelict_spawn_timer <= 0.0:
+			_spawn_derelict_ship()
+			derelict_spawn_timer = rnd.randf_range(36.0, 54.0)
 
 func spawn_saucer():
 	var s = saucer_scene.instantiate()
@@ -252,8 +260,7 @@ func generateAsteroids():
 	var is_boss_wave: bool = (current_wave % 5 == 0)
 	var mutator: WaveMutator = WaveMutator.NONE
 	if not is_boss_wave and current_wave >= 2:
-		var trigger_chance: float = 1.0 if current_wave == 2 else 0.8
-		if rnd.randf() <= trigger_chance:
+		if rnd.randf() <= 0.45:
 			mutator = _pick_wave_mutator()
 	active_mutator = mutator
 	
@@ -342,6 +349,24 @@ func _activate_mutator(mutator: WaveMutator):
 	if title != "" and hud != null and hud.has_method("announce_mutator"):
 		hud.announce_mutator(title, col)
 	audio_manager_script.play_mutator_alert(get_tree())
+
+func _has_active_salvage() -> bool:
+	for s in get_tree().get_nodes_in_group("salvage"):
+		if is_instance_valid(s) and !s.is_queued_for_deletion():
+			return true
+	return false
+
+func _spawn_derelict_ship():
+	if _has_active_salvage():
+		return
+	var d = derelict_ship_scene.instantiate()
+	var from_left: bool = rnd.randf() > 0.5
+	var start_x: float = -60.0 if from_left else screen_size.x + 60.0
+	var end_x: float = screen_size.x + 90.0 if from_left else -90.0
+	var start_y: float = rnd.randf_range(90.0, screen_size.y - 90.0)
+	var end_y: float = clamp(start_y + rnd.randf_range(-160.0, 160.0), 80.0, screen_size.y - 80.0)
+	add_child(d)
+	d.setup_drift(Vector2(start_x, start_y), Vector2(end_x, end_y), rnd.randf_range(48.0, 66.0))
 
 func _has_active_comet() -> bool:
 	for c in get_tree().get_nodes_in_group("comets"):
@@ -531,6 +556,10 @@ func restart_game():
 		
 	current_wave = 1
 	saucer_spawn_timer = 8.0
+	derelict_spawn_timer = rnd.randf_range(28.0, 42.0)
+	var bg = get_tree().get_first_node_in_group("background")
+	if bg != null and bg.has_method("regenerate_vista"):
+		bg.regenerate_vista()
 	if score_manager != null:
 		score_manager.reset_game()
 	if hud != null:
@@ -558,13 +587,9 @@ func _respawn_player():
 					a.linear_velocity = a.linear_velocity.bounce(away_dir)
 	$player.respawn(center)	
 
-func showBulletImpact(pos):
-	var crash = rock_crash.instantiate()
-	crash.global_position = pos
-	crash.get_child(0).amount = 25
-	crash.get_child(0).color = Color.WHITE
-	add_child(crash)
-	crash.get_child(0).emitting = true
+func showBulletImpact(_pos):
+	# Handled directly by ImpactFX.spawn_ricochet() in bullet.gd
+	pass
 
 func showAsteroidExplosion(pos):
 	var crash = rock_crash.instantiate()

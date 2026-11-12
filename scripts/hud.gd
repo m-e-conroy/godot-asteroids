@@ -29,6 +29,9 @@ extends CanvasLayer
 @onready var wave_announce_label = $WaveAnnounceLabel
 @onready var mutator_announce_label = $MutatorAnnounceLabel
 @onready var mutator_badge_label = $MutatorBadgeLabel
+@onready var salvage_panel = $BottomBar/SalvagePanel
+@onready var salvage_label = $BottomBar/SalvagePanel/SalvageLabel
+@onready var salvage_toast_label = $SalvageToastLabel
 
 var current_lives: int = 3
 var current_high_score: int = 0
@@ -49,6 +52,8 @@ func _ready():
 	wave_announce_label.visible = false
 	mutator_announce_label.visible = false
 	mutator_badge_label.visible = false
+	salvage_panel.visible = false
+	salvage_toast_label.visible = false
 	$GameOverOverlay/VBox/RestartPrompt.visible = false
 
 func connect_score_manager(score_mgr: Node):
@@ -70,6 +75,9 @@ func connect_score_manager(score_mgr: Node):
 
 func set_player(player: Node2D):
 	player_node = player
+	if player_node != null and player_node.has_signal("salvage_updated"):
+		if not player_node.salvage_updated.is_connected(_on_salvage_updated):
+			player_node.salvage_updated.connect(_on_salvage_updated)
 
 func _process(delta: float):
 	pulse_time += delta * 4.0
@@ -237,3 +245,38 @@ func clear_mutator():
 		mutator_announce_label.visible = false
 	if mutator_badge_label != null:
 		mutator_badge_label.visible = false
+
+func _on_salvage_updated(stacks: Dictionary):
+	if salvage_panel == null or salvage_label == null:
+		return
+	var parts: Array[String] = []
+	var twin: int = stacks.get("twin_guns", 0)
+	var bullets: int = stacks.get("more_bullets", 0)
+	var shd_dur: int = stacks.get("shield_duration", 0)
+	var shd_cd: int = stacks.get("shield_cooldown", 0)
+	if twin > 0:
+		parts.append("TWIN x%d" % twin)
+	if bullets > 0:
+		parts.append("CAP +%d" % (bullets * 2))
+	if shd_dur > 0:
+		parts.append("SHD +%ds" % (shd_dur * 2))
+	if shd_cd > 0:
+		parts.append("CHG -%.1fs" % (shd_cd * 2.5))
+	if parts.is_empty():
+		salvage_panel.visible = false
+	else:
+		salvage_label.text = "SALVAGE: " + "  |  ".join(parts)
+		salvage_panel.visible = true
+
+func announce_salvage(title: String, col: Color = Color(1.0, 0.72, 0.15)):
+	if salvage_toast_label == null:
+		return
+	salvage_toast_label.text = title
+	salvage_toast_label.add_theme_color_override("font_color", col)
+	salvage_toast_label.visible = true
+	salvage_toast_label.modulate.a = 1.0
+	var tween = create_tween()
+	tween.tween_property(salvage_toast_label, "scale", Vector2(1.1, 1.1), 0.2).from(Vector2(0.85, 0.85))
+	tween.tween_interval(1.4)
+	tween.tween_property(salvage_toast_label, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(func(): salvage_toast_label.visible = false)

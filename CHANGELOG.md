@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-11-12
+
+### Added
+- **Hybrid Impact VFX (`effects/impact_fx.gd`)**:
+  - Purely visual directional ricochet sparks and surface chips when bullets strike asteroids/comets (`scripts/bullet.gd`).
+  - Contact-point spark showers and rock chips for asteroid-to-asteroid collisions (`Enemies/Asteroid/asteroid.gd`).
+  - Expanding dual-layer frost shockwave ring and ice crystal bursts when comets shatter (`Enemies/Hazards/comet.gd`).
+- **Derelict Ship Salvage & Stackable Upgrades (`Pickups/derelict_ship.tscn`, `Pickups/derelict_ship.gd`)**:
+  - Rare drifting, flickering amber ship wreck with distress beacon and electrical sparks.
+  - Grants one random stackable permanent-until-death upgrade on collection: **Twin Parallel Cannons** (with amber wing gun barrels on `Player/shipSprite.gd`), **Expanded Capacitor** (`+2` bullet limit), **Extended Barrier** (`+2.0s` shield duration), or **Rapid Capacitor** (`-2.5s` shield recharge).
+  - Added persistent `SalvagePanel` indicator and `SalvageToastLabel` pickup banner in `ui/hud.tscn` / `scripts/hud.gd`.
+- **Deep-Space Cosmic Vista (`effects/nebula_background.gd`)**:
+  - Procedural once-per-game distant spiral galaxies, soft shaded planets with optional rings, companion moons with directional crescent rim glow, and decorative shooting stars every `5–10s`.
+
+### Changed
+- **Pulsar Rebalance (`Enemies/Hazards/pulsar.tscn`, `Enemies/Hazards/pulsar.gd`)**:
+  - Made the Pulsar core destroyable (`12` HP, `+400` pts + power-up drop), lengthened cooldown (`3.5s`), slowed beam sweep (`0.35 rad/s`, `1.4s` firing, `9.0px` hit radius), and added asteroid line-of-sight beam occlusion.
+- **Wave Anomaly Frequency (`scripts/null_sector.gd`)**:
+  - Changed non-boss Wave 2+ anomalies to trigger at a `45%` random chance (never on boss waves).
+- **Easier Power-Up Collection (`Pickups/powerup.tscn`, `scripts/powerup.gd`)**:
+  - Doubled pickup collider radius (`32.0`) and added `42.0px` proximity collection + `95.0px` gentle magnetic pull.
+
 ## [1.5.0] - 2026-11-12
 
 ### Added

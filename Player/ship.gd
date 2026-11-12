@@ -5,6 +5,7 @@ signal fired_projectile(pos, rot)
 signal shield_strength_change(strength)
 signal ship_destroyed(pos)
 signal ship_respawned
+signal salvage_updated(stacks: Dictionary)
 
 var bullet = preload("res://characters/bullet.tscn")
 var emp_scene = preload("res://effects/emp_shockwave.tscn")
@@ -44,8 +45,17 @@ const WEAPON_BUFF_DURATION: float = 10.0
 var rapid_fire_cooldown: float = 0.0
 const RAPID_FIRE_INTERVAL: float = 0.12
 
-const FORCE_FIELD_ACTIVE_TIME: float = 4.0
-const FORCE_FIELD_RECHARGE_TIME: float = 12.0
+const BASE_PROJECTILE_LIMIT := 4
+const BASE_FORCE_FIELD_ACTIVE_TIME: float = 4.0
+const BASE_FORCE_FIELD_RECHARGE_TIME: float = 12.0
+
+var FORCE_FIELD_ACTIVE_TIME: float = 4.0
+var FORCE_FIELD_RECHARGE_TIME: float = 12.0
+
+var salvage_twin_guns: int = 0
+var salvage_more_bullets: int = 0
+var salvage_shield_duration: int = 0
+var salvage_shield_cooldown: int = 0
 
 var force_field_active_timer: float = 0.0
 var force_field_recharge_timer: float = 0.0
@@ -200,29 +210,95 @@ func _on_projectile_destroyed():
 	projectile_cnt = max(0, projectile_cnt - 1)
 
 func _fire_weapon():
+	var right: Vector2 = transform.x
+	var spawn_center: Vector2 = $ProjectileSpawnLocation.global_position
 	match weapon_mode:
 		WeaponMode.NORMAL:
-			if projectile_cnt < PROJECTILE_LIMIT:
-				$Laser.play()
-				fired_projectile.emit($ProjectileSpawnLocation.global_position, rotation)
-				projectile_cnt += 1
+			_fire_parallel_salvo(spawn_center, right, PROJECTILE_LIMIT)
 		WeaponMode.TRIPLE_SHOT:
-			if projectile_cnt < PROJECTILE_LIMIT * 3:
+			var limit_cap: int = PROJECTILE_LIMIT * 3
+			if projectile_cnt < limit_cap:
 				$Laser.play()
 				var forward: Vector2 = -transform.y
-				var right: Vector2 = transform.x
-				var spawn_center: Vector2 = $ProjectileSpawnLocation.global_position
 				var spawn_left: Vector2 = spawn_center - right * 9.0 + forward * 3.0
 				var spawn_right: Vector2 = spawn_center + right * 9.0 + forward * 3.0
-				fired_projectile.emit(spawn_center, rotation)
+				if salvage_twin_guns >= 1:
+					fired_projectile.emit(spawn_center - right * 6.0, rotation)
+					fired_projectile.emit(spawn_center + right * 6.0, rotation)
+					projectile_cnt += 2
+				else:
+					fired_projectile.emit(spawn_center, rotation)
+					projectile_cnt += 1
 				fired_projectile.emit(spawn_left, rotation - 0.22)
 				fired_projectile.emit(spawn_right, rotation + 0.22)
-				projectile_cnt += 3
+				projectile_cnt += 2
 		WeaponMode.RAPID_FIRE:
-			if projectile_cnt < PROJECTILE_LIMIT * 4:
-				$Laser.play()
-				fired_projectile.emit($ProjectileSpawnLocation.global_position, rotation)
-				projectile_cnt += 1
+			_fire_parallel_salvo(spawn_center, right, PROJECTILE_LIMIT * 4)
+
+func _fire_parallel_salvo(spawn_center: Vector2, right: Vector2, cap: int):
+	if salvage_twin_guns == 0:
+		if projectile_cnt < cap:
+			$Laser.play()
+			fired_projectile.emit(spawn_center, rotation)
+			projectile_cnt += 1
+	elif salvage_twin_guns == 1:
+		if projectile_cnt < max(cap, 2):
+			$Laser.play()
+			fired_projectile.emit(spawn_center - right * 7.0, rotation)
+			fired_projectile.emit(spawn_center + right * 7.0, rotation)
+			projectile_cnt += 2
+	else:
+		if projectile_cnt < max(cap, 3):
+			$Laser.play()
+			fired_projectile.emit(spawn_center - right * 8.5, rotation)
+			fired_projectile.emit(spawn_center, rotation)
+			fired_projectile.emit(spawn_center + right * 8.5, rotation)
+			projectile_cnt += 3
+
+func apply_salvage_upgrade() -> Dictionary:
+	var roll: int = randi() % 4
+	var title := ""
+	var col := Color(1.0, 0.72, 0.15)
+	match roll:
+		0:
+			salvage_twin_guns += 1
+			title = "SALVAGE: TWIN CANNONS x%d" % salvage_twin_guns if salvage_twin_guns == 1 else "SALVAGE: TRIPLE RAIL x%d" % salvage_twin_guns
+			col = Color(1.0, 0.75, 0.15)
+		1:
+			salvage_more_bullets += 1
+			PROJECTILE_LIMIT += 2
+			title = "SALVAGE: +2 CAPACITOR (MAX %d)" % PROJECTILE_LIMIT
+			col = Color(0.25, 0.95, 0.45)
+		2:
+			salvage_shield_duration += 1
+			FORCE_FIELD_ACTIVE_TIME += 2.0
+			title = "SALVAGE: SHIELD DURATION %.0fs" % FORCE_FIELD_ACTIVE_TIME
+			col = Color(0.25, 0.85, 1.0)
+		3:
+			salvage_shield_cooldown += 1
+			FORCE_FIELD_RECHARGE_TIME = max(3.0, FORCE_FIELD_RECHARGE_TIME - 2.5)
+			title = "SALVAGE: SHIELD RECHARGE %.1fs" % FORCE_FIELD_RECHARGE_TIME
+			col = Color(0.45, 0.75, 1.0)
+	_emit_salvage_state()
+	return {"title": title, "color": col}
+
+func reset_salvage_upgrades():
+	salvage_twin_guns = 0
+	salvage_more_bullets = 0
+	salvage_shield_duration = 0
+	salvage_shield_cooldown = 0
+	PROJECTILE_LIMIT = BASE_PROJECTILE_LIMIT
+	FORCE_FIELD_ACTIVE_TIME = BASE_FORCE_FIELD_ACTIVE_TIME
+	FORCE_FIELD_RECHARGE_TIME = BASE_FORCE_FIELD_RECHARGE_TIME
+	_emit_salvage_state()
+
+func _emit_salvage_state():
+	salvage_updated.emit({
+		"twin_guns": salvage_twin_guns,
+		"more_bullets": salvage_more_bullets,
+		"shield_duration": salvage_shield_duration,
+		"shield_cooldown": salvage_shield_cooldown
+	})
 
 func apply_powerup(type_int: int):
 	match type_int:
@@ -285,6 +361,7 @@ func destroy_ship():
 	force_field_state = ForceFieldState.READY
 	force_field_active_timer = 0.0
 	force_field_recharge_timer = 0.0
+	reset_salvage_upgrades()
 	if $Thrusters.playing:
 		$Thrusters.stop()
 	if $SideThrusters.playing:
@@ -312,6 +389,7 @@ func respawn(spawn_pos: Vector2):
 	force_field_state = ForceFieldState.READY
 	force_field_active_timer = 0.0
 	force_field_recharge_timer = 0.0
+	reset_salvage_upgrades()
 	SHIELD = false
 	SHIELD_STRENGTH = 100.0
 	previousShieldStrength = 100.0

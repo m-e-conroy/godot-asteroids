@@ -53,6 +53,17 @@ func _physics_process(delta):
 			obj.takeDamange()
 		elif obj.has_method("take_damange"):
 			obj.take_damange()
+		var hit_normal: Vector2 = collision.get_normal()
+		if hit_normal == Vector2.ZERO and velocity.length_squared() > 0.001:
+			hit_normal = -velocity.normalized()
+		var spark_col := Color(0.45, 1.0, 0.55)
+		if obj.is_in_group("comets"):
+			spark_col = Color(0.55, 0.95, 1.0)
+		elif "COLOR" in obj:
+			spark_col = obj.COLOR
+		var impact_fx = load("res://effects/impact_fx.gd")
+		if impact_fx != null:
+			impact_fx.spawn_ricochet(get_parent(), collision.get_position(), hit_normal, spark_col)
 		hit.emit(position)
 		destroyed.emit()
 		queue_free()

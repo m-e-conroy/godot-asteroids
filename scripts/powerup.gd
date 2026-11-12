@@ -9,6 +9,8 @@ enum Type {
 
 @export var type: Type = Type.TRIPLE_SHOT
 @export var lifetime: float = 15.0
+@export var collect_radius: float = 42.0
+@export var magnet_radius: float = 95.0
 
 var velocity: Vector2 = Vector2.ZERO
 var pulse_time: float = 0.0
@@ -49,24 +51,40 @@ func _process(delta: float):
 	# Gentle slow tumble
 	rotation += delta * 1.2
 	
+	# Proximity magnet & guaranteed radius collection (works even while invulnerable)
+	var player = get_tree().get_first_node_in_group("player")
+	if player != null and is_instance_valid(player) and not ("is_dead" in player and player.is_dead):
+		var to_player: Vector2 = player.global_position - global_position
+		var dist: float = to_player.length()
+		if dist <= collect_radius:
+			_collect(player)
+			return
+		elif dist <= magnet_radius and dist > 0.001:
+			global_position += (to_player / dist) * 140.0 * delta
+	
 	queue_redraw()
 
 func _on_body_entered(body: Node2D):
 	if is_collected:
 		return
-		
-	# Check if collected by player
 	if body.is_in_group("player") or body.name == "player" or body.has_method("apply_powerup"):
-		is_collected = true
-		var am = load("res://scripts/audio_manager.gd")
-		if am != null:
-			am.play_powerup(get_tree())
-		var sm = get_tree().get_first_node_in_group("score_manager")
-		if sm != null:
-			sm.add_score(100, global_position)
-		if body.has_method("apply_powerup"):
-			body.apply_powerup(type)
-		queue_free()
+		if "is_dead" in body and body.is_dead:
+			return
+		_collect(body)
+
+func _collect(body: Node2D):
+	if is_collected:
+		return
+	is_collected = true
+	var am = load("res://scripts/audio_manager.gd")
+	if am != null:
+		am.play_powerup(get_tree())
+	var sm = get_tree().get_first_node_in_group("score_manager")
+	if sm != null:
+		sm.add_score(100, global_position)
+	if body.has_method("apply_powerup"):
+		body.apply_powerup(type)
+	queue_free()
 
 func _draw():
 	# Blink warning during last 3 seconds

@@ -207,7 +207,11 @@ func _integrate_forces(state: PhysicsDirectBodyState2D):
 				var total_r: float = radius + collider_radius
 				contact_pos = global_position + dir * (radius * dist / total_r if total_r > 0 else radius)
 				
-			spawn_crash_effect(contact_pos)
+			var contact_normal: Vector2 = state.get_contact_local_normal(i)
+			if contact_normal == Vector2.ZERO:
+				var to_col: Vector2 = collider.global_position - global_position
+				contact_normal = to_col.normalized() if to_col.length_squared() > 0.0001 else Vector2.RIGHT
+			spawn_crash_effect(contact_pos, contact_normal)
 			crash_cooldown = 0.15 # 150ms debounce
 			break
 
@@ -282,15 +286,10 @@ func _physics_process(delta):
 	av = angular_velocity
 # _physics_process
 
-func spawn_crash_effect(pos: Vector2):
-	var crash = ROCK_CRASH_SCENE.instantiate()
-	crash.global_position = pos
-	get_parent().add_child(crash)
-	var particles: CPUParticles2D = crash.get_child(0) as CPUParticles2D
-	if particles:
-		particles.amount = 16
-		particles.color = COLOR
-		particles.emitting = true
+func spawn_crash_effect(pos: Vector2, contact_normal: Vector2 = Vector2.RIGHT):
+	var impact_fx = load("res://effects/impact_fx.gd")
+	if impact_fx != null:
+		impact_fx.spawn_asteroid_crash(get_parent(), pos, contact_normal, COLOR)
 
 func update_color():
 	var new_color: Color = Color.LAWN_GREEN
