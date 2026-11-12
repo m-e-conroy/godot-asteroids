@@ -69,6 +69,9 @@ func _ready():
 	welcome_screen = welcome_screen_scene.instantiate()
 	add_child(welcome_screen)
 	welcome_screen.set_high_score(score_manager.high_score)
+	if welcome_screen.has_method("set_leaderboard"):
+		welcome_screen.set_leaderboard(score_manager.leaderboard)
+		score_manager.leaderboard_updated.connect(welcome_screen.set_leaderboard)
 	welcome_screen.launch_requested.connect(_on_welcome_launch)
 	
 	pause_menu = pause_menu_scene.instantiate()
@@ -184,6 +187,8 @@ func _input(event):
 					pause_menu.open_pause()
 					get_viewport().set_input_as_handled()
 	elif game_state == GameState.GAME_OVER and can_restart:
+		if hud != null and hud.has_method("is_entering_initials") and hud.is_entering_initials():
+			return
 		if event is InputEventKey and event.pressed and not event.is_echo():
 			if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_R:
 				restart_game()
@@ -194,6 +199,8 @@ func _process(delta):
 	if game_state == GameState.GAME_OVER:
 		if audio_manager != null:
 			audio_manager.set_heartbeat(false)
+		if hud != null and hud.has_method("is_entering_initials") and hud.is_entering_initials():
+			return
 		game_over_return_timer -= delta
 		if hud != null:
 			hud.set_game_over_countdown(game_over_return_timer)

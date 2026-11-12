@@ -60,6 +60,9 @@ var salvage_shield_cooldown: int = 0
 var force_field_active_timer: float = 0.0
 var force_field_recharge_timer: float = 0.0
 
+const HYPERSPACE_COOLDOWN: float = 8.0
+var hyperspace_cooldown_timer: float = 0.0
+
 var rotation_speed := 0.0
 var projectile_cnt := 0
 var previousShieldStrength := 100.0
@@ -77,6 +80,9 @@ func _input(event):
 		TURN_RIGHT = true
 	elif event.is_action_pressed("shield") and force_field_state == ForceFieldState.READY:
 		activate_force_field()
+	elif event is InputEventKey and event.pressed and not event.is_echo():
+		if (event.keycode == KEY_SHIFT or event.keycode == KEY_H) and hyperspace_cooldown_timer <= 0.0:
+			activate_hyperspace()
 		
 	if event.is_action_pressed("fire"):
 		FIRE_HELD = true
@@ -103,6 +109,9 @@ func _ready():
 func _physics_process(delta):
 	if is_dead:
 		return
+
+	if hyperspace_cooldown_timer > 0.0:
+		hyperspace_cooldown_timer = max(0.0, hyperspace_cooldown_timer - delta)
 
 	# Manage Force Field Timers & State Transitions
 	match force_field_state:
@@ -325,6 +334,46 @@ func apply_powerup(type_int: int):
 			previousShieldStrength = 100.0
 			shield_strength_change.emit(100.0)
 
+func activate_hyperspace():
+	if is_dead or hyperspace_cooldown_timer > 0.0:
+		return
+	hyperspace_cooldown_timer = HYPERSPACE_COOLDOWN
+	var parent_node := get_parent()
+	var shrapnel = load("res://effects/vector_shrapnel.gd")
+	if shrapnel != null and parent_node != null:
+		shrapnel.spawn(parent_node, global_position, Color(0.3, 0.9, 1.0), 10, 1.4)
+		
+	var dest := _find_hyperspace_destination()
+	global_position = dest
+	velocity *= 0.25
+	
+	if shrapnel != null and parent_node != null:
+		shrapnel.spawn(parent_node, global_position, Color(0.85, 1.0, 1.0), 12, 1.5)
+	var am = load("res://scripts/audio_manager.gd")
+	if am != null:
+		am.play_hyperspace(get_tree())
+	start_invulnerability(0.5)
+
+func _find_hyperspace_destination() -> Vector2:
+	var margin := 85.0
+	var best_pos := Vector2(randf_range(margin, SCREEN_SIZE.x - margin), randf_range(margin, SCREEN_SIZE.y - margin))
+	var best_min_dist: float = -1.0
+	for _attempt in range(12):
+		var cand := Vector2(randf_range(margin, SCREEN_SIZE.x - margin), randf_range(margin, SCREEN_SIZE.y - margin))
+		var min_d := 99999.0
+		for a in get_tree().get_nodes_in_group("asteroids"):
+			if is_instance_valid(a):
+				min_d = min(min_d, cand.distance_to(a.global_position))
+		for h in get_tree().get_nodes_in_group("hazards"):
+			if is_instance_valid(h):
+				min_d = min(min_d, cand.distance_to(h.global_position))
+		if min_d >= 130.0:
+			return cand
+		if min_d > best_min_dist:
+			best_min_dist = min_d
+			best_pos = cand
+	return best_pos
+
 func activate_force_field():
 	if force_field_state != ForceFieldState.READY:
 		return
@@ -361,6 +410,7 @@ func destroy_ship():
 	force_field_state = ForceFieldState.READY
 	force_field_active_timer = 0.0
 	force_field_recharge_timer = 0.0
+	hyperspace_cooldown_timer = 0.0
 	reset_salvage_upgrades()
 	if $Thrusters.playing:
 		$Thrusters.stop()
@@ -389,6 +439,7 @@ func respawn(spawn_pos: Vector2):
 	force_field_state = ForceFieldState.READY
 	force_field_active_timer = 0.0
 	force_field_recharge_timer = 0.0
+	hyperspace_cooldown_timer = 0.0
 	reset_salvage_upgrades()
 	SHIELD = false
 	SHIELD_STRENGTH = 100.0

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="NULL SECTOR"
-config/version="1.6.0"
+config/version="1.7.0"
 run/main_scene="res://Null_Sector.tscn"
 config/features=PackedStringArray("4.2", "Mobile")
 boot_splash/bg_color=Color(0, 0, 0, 1)

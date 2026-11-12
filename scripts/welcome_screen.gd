@@ -32,6 +32,10 @@ func set_high_score(val: int):
 	if high_score_display != null and high_score_display.has_method("set_number"):
 		high_score_display.set_number(val, true)
 
+func set_leaderboard(entries: Array):
+	if attract_carousel != null and attract_carousel.has_method("set_leaderboard"):
+		attract_carousel.set_leaderboard(entries)
+
 func _process(delta: float):
 	if is_launching:
 		return

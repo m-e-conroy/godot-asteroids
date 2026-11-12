@@ -7,11 +7,16 @@ signal wave_changed(new_wave: int)
 signal bonus_life_awarded()
 signal combo_changed(new_combo: int, time_ratio: float)
 signal game_over(final_score: int, wave_reached: int, is_new_high: bool)
+signal leaderboard_updated(entries: Array)
 
 const SAVE_PATH: String = "user://highscore.save"
+const LEADERBOARD_PATH: String = "user://leaderboard.json"
+const MAX_LEADERBOARD: int = 10
 const BONUS_LIFE_STEP: int = 10000
 const COMBO_WINDOW: float = 3.5
 const MAX_COMBO: int = 8
+
+var leaderboard: Array = []
 
 var score: int = 0
 var high_score: int = 0
@@ -26,6 +31,7 @@ var is_new_high_score: bool = false
 func _ready():
 	add_to_group("score_manager")
 	load_high_score()
+	load_leaderboard()
 
 func _process(delta: float):
 	if is_game_over:
@@ -138,3 +144,61 @@ func save_high_score():
 	if file != null:
 		file.store_string(str(high_score))
 		file.close()
+
+func load_leaderboard():
+	leaderboard.clear()
+	if FileAccess.file_exists(LEADERBOARD_PATH):
+		var file = FileAccess.open(LEADERBOARD_PATH, FileAccess.READ)
+		if file != null:
+			var parsed = JSON.parse_string(file.get_as_text())
+			file.close()
+			if parsed is Array:
+				for item in parsed:
+					if item is Dictionary and item.has("score"):
+						leaderboard.append({
+							"initials": str(item.get("initials", "AAA")).substr(0, 3).to_upper(),
+							"score": int(item.get("score", 0)),
+							"wave": int(item.get("wave", 1))
+						})
+	_sort_and_trim_leaderboard()
+	leaderboard_updated.emit(leaderboard)
+
+func save_leaderboard():
+	var file = FileAccess.open(LEADERBOARD_PATH, FileAccess.WRITE)
+	if file != null:
+		file.store_string(JSON.stringify(leaderboard))
+		file.close()
+
+func _sort_and_trim_leaderboard():
+	leaderboard.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["score"]) != int(b["score"]):
+			return int(a["score"]) > int(b["score"])
+		return int(a["wave"]) > int(b["wave"])
+	)
+	if leaderboard.size() > MAX_LEADERBOARD:
+		leaderboard.resize(MAX_LEADERBOARD)
+
+func qualifies_for_leaderboard(check_score: int) -> bool:
+	if check_score <= 0:
+		return false
+	if leaderboard.size() < MAX_LEADERBOARD:
+		return true
+	return check_score > int(leaderboard[leaderboard.size() - 1]["score"])
+
+func submit_leaderboard_entry(initials: String, entry_score: int, entry_wave: int):
+	var clean: String = initials.strip_edges().to_upper()
+	while clean.length() < 3:
+		clean += "A"
+	clean = clean.substr(0, 3)
+	leaderboard.append({
+		"initials": clean,
+		"score": entry_score,
+		"wave": entry_wave
+	})
+	_sort_and_trim_leaderboard()
+	save_leaderboard()
+	if leaderboard.size() > 0 and int(leaderboard[0]["score"]) > high_score:
+		high_score = int(leaderboard[0]["score"])
+		high_score_changed.emit(high_score)
+		save_high_score()
+	leaderboard_updated.emit(leaderboard)

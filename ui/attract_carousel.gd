@@ -3,7 +3,7 @@ extends Control
 
 signal card_changed(card_index: int)
 
-enum Card { THREATS, CONTROLS, UPGRADES, MUTATORS }
+enum Card { THREATS, CONTROLS, UPGRADES, MUTATORS, LEADERBOARD }
 
 @export var current_card: Card = Card.THREATS:
 	set(val):
@@ -18,6 +18,11 @@ enum Card { THREATS, CONTROLS, UPGRADES, MUTATORS }
 var timer: float = 0.0
 var anim_time: float = 0.0
 var transition_alpha: float = 1.0
+var leaderboard_entries: Array = []
+
+func set_leaderboard(entries: Array):
+	leaderboard_entries = entries.duplicate(true)
+	queue_redraw()
 
 # Color Tokens
 const COLOR_GREEN: Color = Color(0.16, 0.94, 0.0)
@@ -77,6 +82,8 @@ func _draw():
 			_draw_upgrades_arsenal(center, font)
 		Card.MUTATORS:
 			_draw_wave_mutators(center, font)
+		Card.LEADERBOARD:
+			_draw_leaderboard(center, font)
 			
 	# Draw navigation pips and card switcher at bottom
 	if show_nav_pips:
@@ -206,12 +213,15 @@ func _draw_flight_manual(center: Vector2, font: Font):
 	_draw_callout_bracket(left_wing, left_wing + Vector2(-120, 0), "[A] or [◄]  ROTATE PORT", COLOR_GREEN, font, false, HORIZONTAL_ALIGNMENT_RIGHT)
 	_draw_callout_bracket(right_wing, right_wing + Vector2(120, 0), "[D] or [►]  ROTATE STBD", COLOR_GREEN, font, false, HORIZONTAL_ALIGNMENT_LEFT)
 
-	# Callout 4: Force Field Shield
-	var shield_label_pos = center + Vector2(0, 100.0)
+	# Callout 4: Force Field Shield & Hyperspace Warp
+	var shield_label_pos = center + Vector2(0, 92.0)
 	if font != null:
 		var s_text = "[S] or [▼]  DEFLECTOR FORCE FIELD // 4.0s BARRIER (12s RECHARGE)"
-		var s_sz = font.get_string_size(s_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
-		draw_string(font, Vector2(center.x - s_sz.x / 2.0, shield_label_pos.y), s_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, COLOR_CYAN)
+		var s_sz = font.get_string_size(s_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+		draw_string(font, Vector2(center.x - s_sz.x / 2.0, shield_label_pos.y), s_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, COLOR_CYAN)
+		var w_text = "[SHIFT] or [H]  HYPERSPACE EMERGENCY WARP // 8.0s COOLDOWN"
+		var w_sz = font.get_string_size(w_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+		draw_string(font, Vector2(center.x - w_sz.x / 2.0, shield_label_pos.y + 18.0), w_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, COLOR_GOLD)
 
 func _draw_callout_bracket(from_pt: Vector2, to_pt: Vector2, text: String, col: Color, font: Font, above: bool = false, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_CENTER):
 	# Leader line
@@ -262,12 +272,18 @@ func _draw_upgrades_arsenal(center: Vector2, font: Font):
 			"desc": "Instantly resets Force Field cooldown and restores barrier to 100% READY",
 			"color": COLOR_GREEN,
 			"icon": "shield"
+		},
+		{
+			"title": "DERELICT SALVAGE // PERMANENT UPGRADES",
+			"desc": "Collect amber wrecks for stackable Twin Guns, +2 Cap, +2s Shield, or -2.5s Charge",
+			"color": Color(1.0, 0.65, 0.12),
+			"icon": "salvage"
 		}
 	]
 
-	var start_y = 65.0
-	var card_w = 480.0
-	var row_h = 42.0
+	var start_y = 50.0
+	var card_w = 500.0
+	var row_h = 37.0
 
 	for i in range(items.size()):
 		var item = items[i]
@@ -307,6 +323,10 @@ func _draw_powerup_icon(pos: Vector2, icon_type: String, col: Color):
 				pts.append(pos + Vector2(cos(a), sin(a)) * 8.5)
 			draw_polyline(pts, col, 1.4, true)
 			draw_circle(pos, 2.5, Color.WHITE)
+		"salvage":
+			var wreck := PackedVector2Array([pos + Vector2(0, -8), pos + Vector2(-5, 6), pos + Vector2(0, 3), pos + Vector2(3, -1), pos + Vector2(0, -8)])
+			draw_polyline(wreck, col, 1.5, true)
+			draw_circle(pos + Vector2(0, -2), 1.8, Color.WHITE)
 
 # ==============================================================================
 # CARD 4: SECTOR ANOMALIES & WAVE MUTATORS
@@ -390,6 +410,51 @@ func _draw_mutator_icon(pos: Vector2, icon_type: String, col: Color):
 		"hyper":
 			draw_polyline(PackedVector2Array([pos + Vector2(-7, -5), pos + Vector2(-1, 0), pos + Vector2(-7, 5)]), col, 1.6)
 			draw_polyline(PackedVector2Array([pos + Vector2(1, -5), pos + Vector2(7, 0), pos + Vector2(1, 5)]), col, 1.6)
+
+# ==============================================================================
+# CARD 5: TOP 10 ARCADE HALL OF FAME
+# ==============================================================================
+func _draw_leaderboard(center: Vector2, font: Font):
+	var title_text = "--- HALL OF FAME // TOP 10 PILOTS ---"
+	if font != null:
+		var t_size = font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+		draw_string(font, Vector2(center.x - t_size.x / 2.0, 24.0), title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, COLOR_GOLD)
+
+	if leaderboard_entries.is_empty():
+		if font != null:
+			var empty_msg = "NO FLIGHT RECORDS YET — LAUNCH TO CLAIM #01"
+			var e_sz = font.get_string_size(empty_msg, HORIZONTAL_ALIGNMENT_CENTER, -1, 13)
+			draw_string(font, Vector2(center.x - e_sz.x / 2.0, center.y), empty_msg, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(COLOR_CYAN.r, COLOR_CYAN.g, COLOR_CYAN.b, 0.8))
+		return
+
+	var col1_x: float = center.x - 245.0
+	var col2_x: float = center.x + 25.0
+	var start_y: float = 62.0
+	var row_h: float = 34.0
+
+	for i in range(min(10, leaderboard_entries.size())):
+		var entry: Dictionary = leaderboard_entries[i]
+		var col_x: float = col1_x if i < 5 else col2_x
+		var row_idx: int = i if i < 5 else (i - 5)
+		var y: float = start_y + row_idx * row_h
+
+		var row_col: Color = Color(0.85, 0.9, 0.9)
+		if i == 0:
+			row_col = COLOR_GOLD
+		elif i == 1:
+			row_col = COLOR_CYAN
+		elif i == 2:
+			row_col = COLOR_GREEN
+
+		if font != null:
+			var rank_str: String = "#%02d" % (i + 1)
+			var init_str: String = str(entry.get("initials", "AAA"))
+			var wave_str: String = "W%02d" % int(entry.get("wave", 1))
+			var score_str: String = "%06d" % int(entry.get("score", 0))
+			draw_string(font, Vector2(col_x, y), rank_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, row_col)
+			draw_string(font, Vector2(col_x + 38.0, y), init_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+			draw_string(font, Vector2(col_x + 88.0, y), wave_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(COLOR_CYAN.r, COLOR_CYAN.g, COLOR_CYAN.b, 0.8))
+			draw_string(font, Vector2(col_x + 132.0, y), score_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, row_col)
 
 # ==============================================================================
 # NAVIGATION PIPS & BROWSER HELPER

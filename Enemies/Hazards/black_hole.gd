@@ -1,10 +1,11 @@
 extends Node2D
 
-@export var gravity_radius: float = 340.0
-@export var event_horizon_radius: float = 22.0
-@export var player_pull_strength: float = 215.0
-@export var bullet_pull_strength: float = 480.0
-@export var asteroid_pull_strength: float = 135.0
+@export var gravity_radius: float = 250.0
+@export var event_horizon_radius: float = 18.0
+@export var player_pull_strength: float = 125.0
+@export var bullet_pull_strength: float = 320.0
+@export var asteroid_pull_strength: float = 90.0
+@export var enemy_pull_strength: float = 105.0
 
 var spin_angle: float = 0.0
 var pulse_time: float = 0.0
@@ -25,6 +26,7 @@ func _physics_process(delta: float):
 	_pull_bullets("player_bullets", delta, true)
 	_pull_bullets("enemy_bullets", delta, false)
 	_pull_asteroids(delta)
+	_pull_enemies(delta)
 	
 	queue_redraw()
 
@@ -48,7 +50,7 @@ func _pull_player(delta: float):
 		return
 		
 	var falloff: float = 1.0 - (dist / gravity_radius)
-	var pull: float = player_pull_strength * (0.25 + 1.15 * falloff * falloff)
+	var pull: float = player_pull_strength * (0.15 + 0.85 * falloff * falloff)
 	player.velocity += dir * pull * delta
 
 func _pull_bullets(group_name: String, delta: float, orient_laser: bool):
@@ -94,6 +96,34 @@ func _pull_asteroids(delta: float):
 			var dir: Vector2 = to_core / max(dist, 1.0)
 			var falloff: float = 1.0 - (dist / gravity_radius)
 			a.linear_velocity += dir * asteroid_pull_strength * (0.25 + falloff) * delta
+
+func _pull_enemies(delta: float):
+	var parent_node := get_parent()
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if !is_instance_valid(e) or e.is_queued_for_deletion():
+			continue
+		if e.is_in_group("bosses"):
+			continue
+		var to_core: Vector2 = global_position - e.global_position
+		var dist: float = to_core.length()
+		if dist > gravity_radius:
+			continue
+		if dist < event_horizon_radius:
+			var shrapnel = load("res://effects/vector_shrapnel.gd")
+			if shrapnel != null and parent_node != null:
+				shrapnel.spawn(parent_node, e.global_position, COLOR_DISK_INNER, 8, 1.3)
+			if e.has_method("destroy"):
+				if e.is_in_group("drones"):
+					e.destroy(false)
+				else:
+					e.destroy()
+			else:
+				e.queue_free()
+			continue
+		var dir: Vector2 = to_core / max(dist, 1.0)
+		var falloff: float = 1.0 - (dist / gravity_radius)
+		# Apply displacement directly since saucer/drone overwrite velocity each frame
+		e.global_position += dir * enemy_pull_strength * (0.2 + falloff * falloff) * delta
 
 func _draw():
 	# 1. Outer gravitational lensing rings pulsing inward

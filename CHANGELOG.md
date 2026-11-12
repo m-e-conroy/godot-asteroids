@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-11-12
+
+### Added
+- **Hyperspace Emergency Warp (`Player/ship.gd`, `scripts/audio_manager.gd`, `ui/hud.tscn`, `scripts/hud.gd`)**:
+  - Press `SHIFT` or `H` on an `8.0s` cooldown to warp to a clear sector coordinate with `0.5s` post-warp invulnerability, vector shrapnel departure/arrival bursts, synthesized warp sweep audio, and a `WARP` HUD cooldown indicator.
+- **Top-10 Arcade Leaderboard & 3-Letter Initials (`scripts/score_manager.gd`, `ui/hud.tscn`, `scripts/hud.gd`, `scripts/null_sector.gd`)**:
+  - Persistent `user://leaderboard.json` storing the top `10` scores with 3-letter pilot initials and wave reached.
+  - Interactive Game Over initial entry (`◄/►` slot, `▲/▼` or `A–Z`/`0–9` keys, `ENTER` to save) that pauses the Game Over auto-return timer until submitted.
+- **Welcome Screen Intel Browser Updates (`ui/attract_carousel.gd`, `scripts/welcome_screen.gd`)**:
+  - Added **Card 5: Hall of Fame // Top 10 Pilots** leaderboard view.
+  - Added Hyperspace Warp to Card 2 (`CONTROLS`) and Derelict Salvage to Card 3 (`UPGRADES`).
+
+### Changed
+- **Black Hole Rebalance & Enemy Gravity (`Enemies/Hazards/black_hole.gd`)**:
+  - Reduced `gravity_radius` (`250.0`), `event_horizon_radius` (`18.0`), and pull strengths (`player_pull_strength = 125.0`) so ship thrusters can always escape orbit.
+  - Added `_pull_enemies()` so saucers, drones, and probes are also pulled into the gravity well and crushed at the event horizon.
+
 ## [1.6.0] - 2026-11-12
 
 ### Added

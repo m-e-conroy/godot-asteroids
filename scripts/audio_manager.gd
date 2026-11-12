@@ -16,6 +16,7 @@ var game_over_stream: AudioStreamWAV = null
 var explosion_small_stream: AudioStreamWAV = null
 var explosion_big_stream: AudioStreamWAV = null
 var mutator_stream: AudioStreamWAV = null
+var hyperspace_stream: AudioStreamWAV = null
 
 var heartbeat_active: bool = false
 var heartbeat_timer: float = 0.0
@@ -93,6 +94,9 @@ static func play_explosion(tree: SceneTree, big: bool = false):
 static func play_mutator_alert(tree: SceneTree):
 	_call_play(tree, "_play_mutator_alert")
 
+static func play_hyperspace(tree: SceneTree):
+	_call_play(tree, "_play_hyperspace")
+
 static func _call_play(tree: SceneTree, method_name: String):
 	if tree == null:
 		return
@@ -124,6 +128,9 @@ func _play_explosion_big():
 func _play_mutator_alert():
 	_play_stream(mutator_stream, -3.0)
 
+func _play_hyperspace():
+	_play_stream(hyperspace_stream, -3.0)
+
 func _play_stream(stream: AudioStream, vol_db: float = 0.0):
 	if stream == null:
 		return
@@ -152,6 +159,7 @@ func _synthesize_all_sounds():
 	explosion_small_stream = _make_arcade_explosion(0.36, 2200.0, 240.0, 145.0, 0.72)
 	explosion_big_stream = _make_arcade_explosion(0.82, 2600.0, 150.0, 125.0, 0.88)
 	mutator_stream = _make_arpeggio([220.0, 311.13, 466.16, 311.13, 622.25], 0.075, 0.36, "triangle")
+	hyperspace_stream = _make_tone_sweep(260.0, 1280.0, 0.22, 0.42, "triangle")
 
 func _make_tone_sweep(f_start: float, f_end: float, duration: float, amp: float, wave: String) -> AudioStreamWAV:
 	var n: int = int(SAMPLE_RATE * duration)
