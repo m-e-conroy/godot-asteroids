@@ -78,6 +78,10 @@ func take_damange():
 func destroy(drop_powerup_chance: bool = true):
 	var parent_node = get_parent()
 	if parent_node != null:
+		var sm = get_tree().get_first_node_in_group("score_manager")
+		if sm != null:
+			sm.add_score(150)
+			
 		var crash = rock_crash_scene.instantiate()
 		crash.global_position = global_position
 		var emitter = crash.get_child(0)

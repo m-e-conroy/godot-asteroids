@@ -24,6 +24,7 @@ const COLOR_EMP: Color = Color(0.2, 0.95, 1.0)          # Electric Cyan
 const COLOR_SHIELD: Color = Color(0.3, 0.7, 1.0)        # Cobalt Blue
 
 func _ready():
+	add_to_group("powerups")
 	# Randomize initial drift velocity if zero
 	if velocity == Vector2.ZERO:
 		var rnd = RandomNumberGenerator.new()
@@ -57,6 +58,9 @@ func _on_body_entered(body: Node2D):
 	# Check if collected by player
 	if body.is_in_group("player") or body.name == "player" or body.has_method("apply_powerup"):
 		is_collected = true
+		var sm = get_tree().get_first_node_in_group("score_manager")
+		if sm != null:
+			sm.add_score(100)
 		if body.has_method("apply_powerup"):
 			body.apply_powerup(type)
 		queue_free()

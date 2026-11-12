@@ -1,0 +1,307 @@
+[gd_scene load_steps=5 format=3 uid="uid://c8h7u6d5hud01"]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://ui/lives_display.gd" id="2_lives"]
+[ext_resource type="Script" path="res://ui/digital_display.gd" id="3_digit"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.04, 0.08, 0.12, 0.75)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.16, 0.94, 0.0, 0.3)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+expand_margin_left = 4.0
+expand_margin_top = 3.0
+expand_margin_right = 4.0
+expand_margin_bottom = 3.0
+
+[node name="HUD" type="CanvasLayer"]
+layer = 50
+script = ExtResource("1_hud")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 54.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 24
+
+[node name="TopBar" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="LivesBox" type="VBoxContainer" parent="MarginContainer/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="LivesLabel" type="Label" parent="MarginContainer/TopBar/LivesBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 0.7)
+theme_override_font_sizes/font_size = 10
+text = "LIVES"
+
+[node name="LivesControl" type="Control" parent="MarginContainer/TopBar/LivesBox"]
+custom_minimum_size = Vector2(90, 24)
+layout_mode = 2
+script = ExtResource("2_lives")
+
+[node name="Spacer1" type="Control" parent="MarginContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScoreBox" type="VBoxContainer" parent="MarginContainer/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ScoreLabel" type="Label" parent="MarginContainer/TopBar/ScoreBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 0.7)
+theme_override_font_sizes/font_size = 10
+text = "SCORE"
+horizontal_alignment = 1
+
+[node name="ScoreDisplay" type="Control" parent="MarginContainer/TopBar/ScoreBox"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+script = ExtResource("3_digit")
+text = "000000"
+digit_count = 6
+
+[node name="Spacer2" type="Control" parent="MarginContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HighScoreBox" type="VBoxContainer" parent="MarginContainer/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HighLabel" type="Label" parent="MarginContainer/TopBar/HighScoreBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.15, 0.7)
+theme_override_font_sizes/font_size = 10
+text = "HIGH SCORE"
+horizontal_alignment = 1
+
+[node name="HighScoreDisplay" type="Control" parent="MarginContainer/TopBar/HighScoreBox"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+script = ExtResource("3_digit")
+text = "000000"
+digit_count = 6
+color_lit = Color(1, 0.8, 0.15, 1)
+color_unlit = Color(1, 0.8, 0.15, 0.08)
+
+[node name="Spacer3" type="Control" parent="MarginContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="WaveBox" type="VBoxContainer" parent="MarginContainer/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="WaveLabel" type="Label" parent="MarginContainer/TopBar/WaveBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 0.7)
+theme_override_font_sizes/font_size = 10
+text = "WAVE"
+horizontal_alignment = 1
+
+[node name="WaveDisplay" type="Control" parent="MarginContainer/TopBar/WaveBox"]
+custom_minimum_size = Vector2(34, 24)
+layout_mode = 2
+script = ExtResource("3_digit")
+text = "01"
+digit_count = 2
+color_lit = Color(0.25, 0.75, 1, 1)
+color_unlit = Color(0.25, 0.75, 1, 0.08)
+
+[node name="BottomBar" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ShieldPanel" type="PanelContainer" parent="BottomBar"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -38.0
+offset_right = 230.0
+offset_bottom = -14.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="HBox" type="HBoxContainer" parent="BottomBar/ShieldPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ShieldLabel" type="Label" parent="BottomBar/ShieldPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "SHIELD: READY"
+
+[node name="ShieldProgress" type="ProgressBar" parent="BottomBar/ShieldPanel/HBox"]
+custom_minimum_size = Vector2(70, 8)
+layout_mode = 2
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="WeaponPanel" type="PanelContainer" parent="BottomBar"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -38.0
+offset_right = -24.0
+offset_bottom = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="HBox" type="HBoxContainer" parent="BottomBar/WeaponPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="WeaponLabel" type="Label" parent="BottomBar/WeaponPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 11
+text = "TRIPLE SHOT 10.0s"
+
+[node name="WeaponProgress" type="ProgressBar" parent="BottomBar/WeaponPanel/HBox"]
+custom_minimum_size = Vector2(70, 8)
+layout_mode = 2
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="WaveAnnounceLabel" type="Label" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -40.0
+offset_right = 150.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(150, 40)
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+theme_override_font_sizes/font_size = 42
+text = "WAVE 01"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GameOverOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="GameOverOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.82)
+
+[node name="VBox" type="VBoxContainer" parent="GameOverOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -140.0
+offset_right = 180.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="GameOverTitle" type="Label" parent="GameOverOverlay/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.15, 0.25, 1)
+theme_override_font_sizes/font_size = 46
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="ScoreBox" type="HBoxContainer" parent="GameOverOverlay/VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="GameOverOverlay/VBox/ScoreBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 0.8)
+theme_override_font_sizes/font_size = 14
+text = "FINAL SCORE:  "
+
+[node name="FinalScoreDisplay" type="Control" parent="GameOverOverlay/VBox/ScoreBox"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+script = ExtResource("3_digit")
+text = "000000"
+digit_count = 6
+
+[node name="HighScoreBox" type="HBoxContainer" parent="GameOverOverlay/VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="GameOverOverlay/VBox/HighScoreBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.15, 0.8)
+theme_override_font_sizes/font_size = 14
+text = "ALL-TIME HIGH: "
+
+[node name="HighDisplay" type="Control" parent="GameOverOverlay/VBox/HighScoreBox"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+script = ExtResource("3_digit")
+text = "000000"
+digit_count = 6
+color_lit = Color(1, 0.8, 0.15, 1)
+
+[node name="NewHighLabel" type="Label" parent="GameOverOverlay/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+text = "★ NEW HIGH SCORE! ★"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="GameOverOverlay/VBox"]
+layout_mode = 2
+
+[node name="RestartPrompt" type="Label" parent="GameOverOverlay/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+theme_override_font_sizes/font_size = 16
+text = "PRESS ENTER OR 'R' TO PLAY AGAIN"
+horizontal_alignment = 1
+

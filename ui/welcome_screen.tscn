@@ -1,0 +1,150 @@
+[gd_scene load_steps=5 format=3 uid="uid://c6r8q0y8u7p1e"]
+
+[ext_resource type="Script" path="res://scripts/welcome_screen.gd" id="1_wlc"]
+[ext_resource type="Script" path="res://ui/digital_display.gd" id="2_dgt"]
+[ext_resource type="Script" path="res://ui/vector_logo.gd" id="3_logo"]
+[ext_resource type="Script" path="res://ui/attract_carousel.gd" id="4_caro"]
+
+[node name="WelcomeScreen" type="CanvasLayer"]
+layer = 50
+script = ExtResource("1_wlc")
+
+[node name="BackgroundDim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.45)
+
+[node name="TopBar" type="MarginContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 54.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 24
+
+[node name="HBox" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+
+[node name="HighScoreBox" type="VBoxContainer" parent="TopBar/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HighLabel" type="Label" parent="TopBar/HBox/HighScoreBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.15, 0.75)
+theme_override_font_sizes/font_size = 10
+text = "ALL-TIME HIGH"
+
+[node name="HighScoreDisplay" type="Control" parent="TopBar/HBox/HighScoreBox"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+script = ExtResource("2_dgt")
+text = "000000"
+digit_count = 6
+color_lit = Color(1, 0.8, 0.15, 1)
+color_unlit = Color(1, 0.8, 0.15, 0.08)
+
+[node name="Spacer1" type="Control" parent="TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CreditsBox" type="VBoxContainer" parent="TopBar/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="CreditsTitle" type="Label" parent="TopBar/HBox/CreditsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 0.75)
+theme_override_font_sizes/font_size = 10
+text = "COIN-OP TELEMETRY"
+horizontal_alignment = 1
+
+[node name="CreditsVal" type="Label" parent="TopBar/HBox/CreditsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "FREE PLAY // 1 COIN 1 PLAY"
+horizontal_alignment = 1
+
+[node name="Spacer2" type="Control" parent="TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SectorBox" type="VBoxContainer" parent="TopBar/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="SectorLabel" type="Label" parent="TopBar/HBox/SectorBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 0.75)
+theme_override_font_sizes/font_size = 10
+text = "MISSION SECTOR"
+horizontal_alignment = 2
+
+[node name="SectorVal" type="Label" parent="TopBar/HBox/SectorBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "SECTOR 0-NULL"
+horizontal_alignment = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 58.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="HeroSection" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(600, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="VectorLogo" type="Control" parent="VBoxContainer/HeroSection"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_logo")
+
+[node name="CarouselSection" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(640, 280)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="AttractCarousel" type="Control" parent="VBoxContainer/CarouselSection"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_caro")
+
+[node name="FooterSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="LaunchPrompt" type="Label" parent="VBoxContainer/FooterSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+theme_override_font_sizes/font_size = 20
+text = ">>> PRESS ENTER OR 'R' TO LAUNCH <<<"
+horizontal_alignment = 1
+
+[node name="SubPrompt" type="Label" parent="VBoxContainer/FooterSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 0.75)
+theme_override_font_sizes/font_size = 11
+text = "[ PRESS SPACE TO ENGAGE // ◄ ► TO BROWSE INTEL ]"
+horizontal_alignment = 1
+
