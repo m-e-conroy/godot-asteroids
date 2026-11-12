@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="NULL SECTOR"
-config/version="1.3.0"
-run/main_scene="res://asteroid_tests.tscn"
+config/version="1.4.0"
+run/main_scene="res://Null_Sector.tscn"
 config/features=PackedStringArray("4.2", "Mobile")
 boot_splash/bg_color=Color(0, 0, 0, 1)
 config/icon="res://icon.svg"

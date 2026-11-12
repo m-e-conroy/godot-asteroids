@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-11-12
+
+### Added
+- **Procedural Arcade Synth Audio (`scripts/audio_manager.gd`)**:
+  - Rising-tempo 2-note bass heartbeat synced to remaining wave asteroids.
+  - Synthesized power-up arpeggio chimes, 10,000-pt extra life fanfare, EMP shockwave sub-bass sweep, wave clear, and game over cues.
+- **Tactical Pause Menu (`ui/pause_menu.tscn`, `scripts/pause_menu.gd`)**:
+  - Triggered with `P` or `ESC` during active gameplay.
+  - Includes Master Audio Volume slider, CRT Scanlines toggle, Resume, Restart Sector, and Return to Briefing.
+- **Combo Multiplier & Floating Score Popups**:
+  - Kill-chain multiplier (`x1`–`x8`) with `3.5s` decay window and HUD badge (`scripts/score_manager.gd`, `scripts/hud.gd`).
+  - Floating vector score popups (`effects/floating_score.gd`) at impact coordinates.
+- **Rule-Based Procedural Boss Battles (Every 5 Waves)**:
+  - Dynamically generated vector bosses (`Enemies/Boss/procedural_boss.gd`) with randomized radial symmetry (`3–8` arms), rotating shield arcs, tier-scaled HP/speed/bounty, and multi-pattern attack decks (Radial Spirals, Aimed Volleys, Escort Drone Deployment, and Telegraphed Lance Bursts).
+  - Top-center Boss Health Bar in HUD.
+
+### Changed
+- **Main Scene Migration**: Moved primary game entry point from `asteroid_tests.tscn` to `Null_Sector.tscn` (`scripts/null_sector.gd`).
+- **Loosened Ship Handling**: Relaxed `SPACE_DECELERATION_TIME` (`8.5s`) and `ROTATION_STABILIZATION` (`12.0`) in `Player/ship.gd` for smoother, less sticky space drift.
+
 ## [1.3.0] - 2026-11-12
 
 ### Added
