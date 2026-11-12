@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3y7a5u9saucer01"]
+
+[ext_resource type="Script" path="res://scripts/saucer.gd" id="1_saucer"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hit"]
+radius = 18.0
+
+[node name="saucer" type="CharacterBody2D"]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_saucer")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-24, 0, -16, -6, -10, -6, -6, -14, 6, -14, 10, -6, 16, -6, 24, 0, 16, 6, 8, 6, 5, 11, -5, 11, -8, 6, -16, 6)
+
+[node name="HitArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]
+shape = SubResource("CircleShape2D_hit")

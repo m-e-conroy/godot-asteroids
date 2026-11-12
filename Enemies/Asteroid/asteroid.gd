@@ -3,7 +3,7 @@ extends RigidBody2D
 signal destroyed(pos, sz)
 signal linear_velocity_changed(vec)
 signal angular_velocity_changed(rad)
-signal take_hit
+signal take_hit(amount: int)
 
 var ROCK_CRASH_SCENE = preload("res://effects/rock_crash.tscn")
 
@@ -13,7 +13,13 @@ var ROCK_CRASH_SCENE = preload("res://effects/rock_crash.tscn")
 @onready var SCREEN_SIZE := get_viewport_rect().size
 
 var SIZE: String = 'lg'
+var size: String:
+	get:
+		return SIZE
+	set(val):
+		SIZE = val
 var STRENGTH: int = 1
+var MAX_STRENGTH: int = 1
 var COLOR: Color = Color.LAWN_GREEN
 
 #var polyPts: Array = []
@@ -21,6 +27,7 @@ var radius := 100.0
 var minRadius := 75.0
 var lv: Vector2 = Vector2.ZERO
 var av: float = 0.0
+var crash_cooldown := 0.0
 
 # clones will keep track of asteroid copies for screen flip purposes when an asteroid should overlap more than one edge of the screen
 var clones: Dictionary = {
@@ -37,6 +44,7 @@ var rnd = RandomNumberGenerator.new()
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	rnd.randomize()
+	add_to_group("asteroids")
 	
 	linear_damp = 0 # how much linear movement slows down by in open space (friction)
 	angular_damp = 0 # how much rotational movement slows down by in open space (friction)
@@ -44,19 +52,31 @@ func _ready():
 	contact_monitor = true # turn on collision detection
 	max_contacts_reported = 10
 	
-	match SIZE:
-		'lg':
-			mass = rnd.randf_range(150, 200)
-			STRENGTH = rnd.randi_range(15,20)
-		'md':
-			mass = rnd.randf_range(80, 130)
-			STRENGTH = rnd.randi_range(10,15)
-		'sm':
-			mass = rnd.randf_range(10, 60)
-			STRENGTH = rnd.randi_range(5,10)
-		'xs':
-			mass = rnd.randf_range(3, 10)
-			STRENGTH = rnd.randi_range(1,5)
+	if !CLONED:
+		match SIZE:
+			'lg':
+				mass = rnd.randf_range(150, 200)
+				STRENGTH = rnd.randi_range(15, 20)
+				minRadius = 80.0
+				radius = 100.0
+			'md':
+				mass = rnd.randf_range(80, 130)
+				STRENGTH = rnd.randi_range(10, 15)
+				minRadius = 55.0
+				radius = 75.0
+			'sm':
+				mass = rnd.randf_range(10, 60)
+				STRENGTH = rnd.randi_range(5, 10)
+				minRadius = 20.0
+				radius = 30.0
+			'xs':
+				mass = rnd.randf_range(3, 10)
+				STRENGTH = rnd.randi_range(1, 5)
+				minRadius = 6.0
+				radius = 12.0
+
+		MAX_STRENGTH = STRENGTH
+		update_color()
 # end _ready
 
 func is_overlapping() -> bool:
@@ -67,6 +87,11 @@ func cloneSelf(dir: String):
 	clones[dir].CLONED = true
 	clones[dir].get_node("Sprite2D").set("polyPts", SPRITE.polyPts)
 	clones[dir].COLOR = COLOR
+	clones[dir].radius = radius
+	clones[dir].minRadius = minRadius
+	clones[dir].SIZE = SIZE
+	clones[dir].MAX_STRENGTH = MAX_STRENGTH
+	clones[dir].STRENGTH = STRENGTH
 	
 	# set the position of the clone
 	if (dir == 'corner'):
@@ -138,7 +163,54 @@ func freeClones():
 			removeClone(dir)
 # freeClones
 
-func _integrate_forces(state):
+func _integrate_forces(state: PhysicsDirectBodyState2D):
+	# Enforce maximum velocity bounds per asteroid size to prevent physics runaway
+	var max_spd: float = 45.0
+	match SIZE:
+		'lg': max_spd = 45.0
+		'md': max_spd = 70.0
+		'sm': max_spd = 100.0
+		'xs': max_spd = 140.0
+	
+	if state.linear_velocity.length() > max_spd:
+		state.linear_velocity = state.linear_velocity.limit_length(max_spd)
+		
+	# Enforce reasonable angular velocity bounds
+	state.angular_velocity = clamp(state.angular_velocity, -2.5, 2.5)
+
+	# Handle collision VFX at exact physical contact point
+	var contact_count: int = state.get_contact_count()
+	if contact_count > 0 and crash_cooldown <= 0.0:
+		for i in range(contact_count):
+			var collider = state.get_contact_collider_object(i)
+			if collider == null:
+				continue
+			
+			# If colliding with a saucer, destroy the saucer immediately
+			if collider.is_in_group("saucers") or collider.name.begins_with("saucer"):
+				if collider.has_method("destroy"):
+					collider.destroy()
+
+			# If colliding with another asteroid, only let the one with lower instance ID spawn to prevent duplicate VFX
+			if collider is RigidBody2D and collider.get_instance_id() > get_instance_id():
+				continue
+				
+			var local_contact: Vector2 = state.get_contact_local_position(i)
+			var collider_contact: Vector2 = state.get_contact_collider_position(i)
+			var contact_pos: Vector2 = (local_contact + collider_contact) * 0.5
+			
+			if contact_pos == Vector2.ZERO:
+				var collider_radius: float = collider.get("radius") if collider.get("radius") != null else 50.0
+				var to_collider: Vector2 = collider.global_position - global_position
+				var dist: float = to_collider.length()
+				var dir: Vector2 = to_collider.normalized() if dist > 0.001 else Vector2.RIGHT
+				var total_r: float = radius + collider_radius
+				contact_pos = global_position + dir * (radius * dist / total_r if total_r > 0 else radius)
+				
+			spawn_crash_effect(contact_pos)
+			crash_cooldown = 0.15 # 150ms debounce
+			break
+
 	if not CLONED:
 		# check to see if the node is starting to go offscreen and create a clone for the opposite
 		# side of the screen such that appears to wrap around the screen
@@ -186,7 +258,10 @@ func _integrate_forces(state):
 # _integrate_forces
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _physics_process(_delta):
+func _physics_process(delta):
+	if crash_cooldown > 0.0:
+		crash_cooldown -= delta
+
 	if lv == Vector2.ZERO:
 		lv = linear_velocity
 	if av == 0.0:
@@ -205,47 +280,46 @@ func _physics_process(_delta):
 		
 	lv = linear_velocity
 	av = angular_velocity
-	
-	var colliders = get_colliding_bodies()
-	if colliders.size() > 0:
-		for n in colliders:
-			var crash = ROCK_CRASH_SCENE.instantiate()
-			#var vec_between: Vector2 = n.global_position - global_position
-			var vec_btw_normalized: Vector2 = (n.global_position - global_position).normalized()
-			var vec_to_collision: Vector2 = vec_btw_normalized * radius
-			crash.global_position = global_position + vec_to_collision
-			get_parent().add_child(crash)
-			crash.get_child(0).color = COLOR
-			crash.get_child(0).emitting = true
-		# for
-	# if
-			
-	match SIZE:
-		'lg':
-			if STRENGTH <= 10:
-				COLOR = Color.YELLOW
-				colorChanged(COLOR)
-		'md':
-			if STRENGTH <= 5:
-				COLOR = Color.YELLOW
-				colorChanged(COLOR)
-		'sm':
-			if STRENGTH <= 3:
-				COLOR = Color.YELLOW
-				colorChanged(COLOR)
-		'xs':
-			if STRENGTH <= 2:
-				COLOR = Color.YELLOW
-				colorChanged(COLOR)
-	# match
-			
-	if STRENGTH == 1:
-		COLOR = Color.RED
-		colorChanged(COLOR)
 # _physics_process
 
-func reduceStrength():
-	STRENGTH -= 1
+func spawn_crash_effect(pos: Vector2):
+	var crash = ROCK_CRASH_SCENE.instantiate()
+	crash.global_position = pos
+	get_parent().add_child(crash)
+	var particles: CPUParticles2D = crash.get_child(0) as CPUParticles2D
+	if particles:
+		particles.amount = 16
+		particles.color = COLOR
+		particles.emitting = true
+
+func update_color():
+	var new_color: Color = Color.LAWN_GREEN
+	
+	# If asteroid started low (strength 1 or 2)
+	if MAX_STRENGTH <= 1:
+		new_color = Color.RED
+	elif MAX_STRENGTH == 2:
+		if STRENGTH <= 1:
+			new_color = Color.RED
+		else:
+			new_color = Color.YELLOW
+	else:
+		# Health ratio determines color progression: Green -> Yellow -> Red
+		var ratio: float = float(STRENGTH) / float(MAX_STRENGTH)
+		if ratio <= 0.30 or STRENGTH <= 2:
+			new_color = Color.RED
+		elif ratio <= 0.65:
+			new_color = Color.YELLOW
+		else:
+			new_color = Color.LAWN_GREEN
+			
+	if COLOR != new_color:
+		COLOR = new_color
+		colorChanged(COLOR)
+
+func reduceStrength(amount: int = 1):
+	STRENGTH -= amount
+	update_color()
 	# if strength is 0 then destroy the asteroid and any associated clones
 	if STRENGTH <= 0:
 		freeClones()
@@ -253,7 +327,15 @@ func reduceStrength():
 		queue_free()
 # reduceStrength
 		
+func take_damage(amount: int = 1):
+	take_hit.emit(amount)
+	if not CLONED:
+		reduceStrength(amount)
+
+# Backwards compatibility aliases
 func takeDamange():
-	take_hit.emit()
-	reduceStrength()
+	take_damage()
+
+func take_damange():
+	take_damage()
 # takeDamage

@@ -6,6 +6,8 @@
 # Godot 4+ specific ignores
 .godot/
 
+.agents/
+
 # Godot-specific ignores
 .import/
 export.cfg

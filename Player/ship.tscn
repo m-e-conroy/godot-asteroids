@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://delju4rcwlhlq"]
+[gd_scene load_steps=12 format=3 uid="uid://delju4rcwlhlq"]
 
 [ext_resource type="Script" path="res://Player/ship.gd" id="1_1fjqd"]
 [ext_resource type="Script" path="res://Player/shipSprite.gd" id="2_m3aby"]
@@ -11,10 +11,12 @@
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_01qwg"]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_forcefield"]
+radius = 40.0
+
 [node name="ship" type="CharacterBody2D"]
 collision_mask = 3
 script = ExtResource("1_1fjqd")
-SPACE_ROTATION_FRICTION = 0.005
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 script = ExtResource("2_m3aby")
@@ -27,6 +29,10 @@ SHIP_COLOR = Color(0.156863, 0.941176, 0, 1)
 polygon = PackedVector2Array(0, -16, 8, 11, 0, 6, -8, 11, 0, -16)
 one_way_collision_margin = 2.0
 script = ExtResource("3_0mc52")
+
+[node name="ForceFieldCollision" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_forcefield")
+disabled = true
 
 [node name="ShieldArea" type="Area2D" parent="."]
 collision_layer = 3

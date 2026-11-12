@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ship_explosion.gd" id="1_expl"]
+[ext_resource type="AudioStream" path="res://sounds/explosion.wav" id="2_audio"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_sparks"]
+
+[node name="ShipExplosion" type="Node2D"]
+script = ExtResource("1_expl")
+
+[node name="Particles" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 45
+lifetime = 0.9
+one_shot = true
+explosiveness = 1.0
+randomness = 0.85
+texture = SubResource("CanvasTexture_sparks")
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 50.0
+initial_velocity_max = 220.0
+scale_amount_min = 1.5
+scale_amount_max = 3.5
+color = Color(0.156863, 0.941176, 0, 1)
+
+[node name="Boom" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_audio")
+volume_db = -4.0
+pitch_scale = 1.0
