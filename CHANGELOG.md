@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-11-12
 
 ### Added
+- **CRT, Nebula & Combat VFX Polish Pass**:
+  - **CRT Shader & HDR Bloom**: Added `effects/crt_overlay.gdshader` (scanlines, subtle chromatic aberration, phosphor bloom, and vignette) plus `WorldEnvironment` additive glow.
+  - **Drifting Nebula & Space Dust Void**: Procedural multi-layered nebula clouds and parallax space dust motes (`effects/nebula_background.gd`) that drift and react to ship velocity.
+  - **Trauma-Based Camera Shake**: Added `scripts/camera_shake.gd` triggered by asteroid splits, enemy kills, EMP blasts, and ship destruction.
+  - **Shattering Vector Shrapnel**: Added `effects/vector_shrapnel.gd` spawning spinning, fading wireframe shards on all asteroid and enemy explosions.
+  - **Glowing Laser Bolts & Plasma Thrusters**: Upgraded `scripts/bullet.gd` with phosphor laser tails and `Player/shipSprite.gd` with flickering dual-layer plasma plumes and RCS puffs.
 - **Project Rebrand & Title: NULL SECTOR**:
   - Rebranded project to **`NULL SECTOR`** (*Tactical Vector Defense // Deep Space Intercept*).
   - Updated `project.godot` application title.

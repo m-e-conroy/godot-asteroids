@@ -13,6 +13,14 @@ extends CanvasLayer
 @onready var weapon_label = $BottomBar/WeaponPanel/HBox/WeaponLabel
 @onready var weapon_progress = $BottomBar/WeaponPanel/HBox/WeaponProgress
 
+@onready var combo_panel = $BottomBar/ComboPanel
+@onready var combo_label = $BottomBar/ComboPanel/HBox/ComboLabel
+@onready var combo_progress = $BottomBar/ComboPanel/HBox/ComboProgress
+
+@onready var boss_panel = $BossPanel
+@onready var boss_name_label = $BossPanel/VBox/BossNameLabel
+@onready var boss_hp_progress = $BossPanel/VBox/BossHpProgress
+
 @onready var game_over_overlay = $GameOverOverlay
 @onready var go_final_score = $GameOverOverlay/VBox/ScoreBox/FinalScoreDisplay
 @onready var go_high_score = $GameOverOverlay/VBox/HighScoreBox/HighDisplay
@@ -34,6 +42,8 @@ const COLOR_MAGENTA: Color = Color(1.0, 0.25, 0.8)
 func _ready():
 	game_over_overlay.visible = false
 	weapon_panel.visible = false
+	combo_panel.visible = false
+	boss_panel.visible = false
 	wave_announce_label.visible = false
 	$GameOverOverlay/VBox/RestartPrompt.visible = false
 
@@ -44,6 +54,8 @@ func connect_score_manager(score_mgr: Node):
 	score_mgr.high_score_changed.connect(_on_high_score_changed)
 	score_mgr.lives_changed.connect(_on_lives_changed)
 	score_mgr.wave_changed.connect(_on_wave_changed)
+	if score_mgr.has_signal("combo_changed"):
+		score_mgr.combo_changed.connect(_on_combo_changed)
 	score_mgr.game_over.connect(_on_game_over)
 	
 	# Initial populate
@@ -174,3 +186,28 @@ func set_game_over_countdown(seconds_left: float):
 	if go_timeout_label != null:
 		var secs: int = max(0, ceili(seconds_left))
 		go_timeout_label.text = "RETURNING TO BRIEFING IN %ds" % secs
+
+func _on_combo_changed(new_combo: int, time_ratio: float):
+	if combo_panel == null:
+		return
+	if new_combo <= 1:
+		combo_panel.visible = false
+	else:
+		combo_panel.visible = true
+		combo_label.text = "COMBO x%d" % new_combo
+		var col = COLOR_GOLD if new_combo < 5 else COLOR_MAGENTA
+		combo_label.modulate = col
+		combo_progress.modulate = col
+		combo_progress.value = clamp(time_ratio * 100.0, 0.0, 100.0)
+
+func update_boss_hp(hp: int, max_hp: int, b_name: String):
+	if boss_panel == null:
+		return
+	boss_panel.visible = true
+	boss_name_label.text = b_name
+	boss_hp_progress.max_value = max_hp
+	boss_hp_progress.value = hp
+
+func hide_boss_bar():
+	if boss_panel != null:
+		boss_panel.visible = false

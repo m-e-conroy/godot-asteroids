@@ -58,9 +58,12 @@ func _on_body_entered(body: Node2D):
 	# Check if collected by player
 	if body.is_in_group("player") or body.name == "player" or body.has_method("apply_powerup"):
 		is_collected = true
+		var am = load("res://scripts/audio_manager.gd")
+		if am != null:
+			am.play_powerup(get_tree())
 		var sm = get_tree().get_first_node_in_group("score_manager")
 		if sm != null:
-			sm.add_score(100)
+			sm.add_score(100, global_position)
 		if body.has_method("apply_powerup"):
 			body.apply_powerup(type)
 		queue_free()

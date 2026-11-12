@@ -82,7 +82,7 @@ func destroy(drop_powerup_chance: bool = true):
 	if parent_node != null:
 		var sm = get_tree().get_first_node_in_group("score_manager")
 		if sm != null:
-			sm.add_score(250)
+			sm.add_score(250, global_position)
 			
 		var crash = rock_crash_scene.instantiate()
 		crash.global_position = global_position
@@ -92,6 +92,13 @@ func destroy(drop_powerup_chance: bool = true):
 		emitter.color = COLOR_DRONE
 		parent_node.add_child(crash)
 		emitter.emitting = true
+		
+		var shrapnel = load("res://effects/vector_shrapnel.gd")
+		if shrapnel != null:
+			shrapnel.spawn(parent_node, global_position, COLOR_DRONE, 7, 1.1)
+		var cam_shake = load("res://scripts/camera_shake.gd")
+		if cam_shake != null:
+			cam_shake.shake(get_tree(), 0.30)
 		
 		# 30% chance to drop powerup if shot
 		if drop_powerup_chance and randf() < 0.30:

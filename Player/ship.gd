@@ -15,10 +15,10 @@ var emp_scene = preload("res://effects/emp_shockwave.tscn")
 @export_group('Motion Parameters')
 @export var ACCELERATION := 220.0
 @export var MAX_SPEED := 320.0
-@export var ROTATION_ACCELERATION := 24.0
-@export var MAX_ROTATION_SPEED := 4.5
-@export var ROTATION_STABILIZATION := 30.0 # Dampens rotation to 0 in ~0.15s
-@export var SPACE_DECELERATION_TIME := 5.0 # Glides to stop over ~5.0 seconds
+@export var ROTATION_ACCELERATION := 20.0
+@export var MAX_ROTATION_SPEED := 4.8
+@export var ROTATION_STABILIZATION := 12.0 # Dampens rotation smoothly in ~0.35s
+@export var SPACE_DECELERATION_TIME := 8.5 # Glides smoothly to a stop over ~8.5 seconds
 
 var TURN_LEFT := false
 var TURN_RIGHT := false

@@ -13,7 +13,11 @@ signal destroyed
 var time_alive := 0.0
 
 func _draw():
-	draw_circle(Vector2(0,0), 3.0, Color.WHITE)
+	# Outer phosphor laser halo & tail
+	draw_line(Vector2(0, -3), Vector2(0, 18), Color(0.16, 0.94, 0.25, 0.45), 4.0)
+	# Crisp inner laser bolt
+	draw_line(Vector2(0, -4), Vector2(0, 12), Color(0.88, 1.0, 0.92, 0.95), 1.8)
+	draw_circle(Vector2(0, -2), 2.6, Color.WHITE)
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

@@ -1,0 +1,126 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3p8x1n4q7k2m"]
+
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pms"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.02, 0.04, 0.02, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.16, 0.94, 0, 0.85)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+layer = 60
+script = ExtResource("1_pms")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = "// SYSTEM PAUSED //"
+horizontal_alignment = 1
+
+[node name="HSep1" type="HSeparator" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="VolumeRow" type="HBoxContainer" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/Margin/VBox/VolumeRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "AUDIO:"
+
+[node name="VolumeSlider" type="HSlider" parent="CenterContainer/Panel/Margin/VBox/VolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 85.0
+
+[node name="VolumeVal" type="Label" parent="CenterContainer/Panel/Margin/VBox/VolumeRow"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+theme_override_font_sizes/font_size = 13
+text = "85%"
+horizontal_alignment = 2
+
+[node name="CrtRow" type="HBoxContainer" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/Margin/VBox/CrtRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "CRT SCANLINES:"
+
+[node name="CrtToggleBtn" type="Button" parent="CenterContainer/Panel/Margin/VBox/CrtRow"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+text = "ON"
+
+[node name="HSep2" type="HSeparator" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="ResumeBtn" type="Button" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.94, 0, 1)
+text = "RESUME MISSION"
+
+[node name="RestartBtn" type="Button" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.15, 1)
+text = "RESTART SECTOR"
+
+[node name="BriefingBtn" type="Button" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.75, 1, 1)
+text = "RETURN TO BRIEFING"
+
+[connection signal="value_changed" from="CenterContainer/Panel/Margin/VBox/VolumeRow/VolumeSlider" to="." method="_on_volume_slider_value_changed"]
+[connection signal="pressed" from="CenterContainer/Panel/Margin/VBox/CrtRow/CrtToggleBtn" to="." method="_on_crt_toggle_btn_pressed"]
+[connection signal="pressed" from="CenterContainer/Panel/Margin/VBox/ResumeBtn" to="." method="_on_resume_btn_pressed"]
+[connection signal="pressed" from="CenterContainer/Panel/Margin/VBox/RestartBtn" to="." method="_on_restart_btn_pressed"]
+[connection signal="pressed" from="CenterContainer/Panel/Margin/VBox/BriefingBtn" to="." method="_on_briefing_btn_pressed"]
+

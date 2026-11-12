@@ -192,6 +192,70 @@ size_flags_vertical = 4
 value = 100.0
 show_percentage = false
 
+[node name="ComboPanel" type="PanelContainer" parent="BottomBar"]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -95.0
+offset_top = -38.0
+offset_right = 95.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="HBox" type="HBoxContainer" parent="BottomBar/ComboPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="ComboLabel" type="Label" parent="BottomBar/ComboPanel/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "COMBO x2"
+
+[node name="ComboProgress" type="ProgressBar" parent="BottomBar/ComboPanel/HBox"]
+custom_minimum_size = Vector2(65, 8)
+layout_mode = 2
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="BossPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -190.0
+offset_top = 58.0
+offset_right = 190.0
+offset_bottom = 96.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="BossPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BossNameLabel" type="Label" parent="BossPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.25, 0.35, 1)
+theme_override_font_sizes/font_size = 11
+text = "OMEGA DREADNOUGHT MK-I"
+horizontal_alignment = 1
+
+[node name="BossHpProgress" type="ProgressBar" parent="BossPanel/VBox"]
+modulate = Color(1, 0.25, 0.35, 1)
+custom_minimum_size = Vector2(340, 8)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
 [node name="WaveAnnounceLabel" type="Label" parent="."]
 visible = false
 anchors_preset = 8

@@ -11,8 +11,13 @@ var hit_objects: Array[Node] = []
 const COLOR_EMP: Color = Color(0.2, 0.95, 1.0)
 
 func _ready():
-	# Play sound if available or screen shake
 	z_index = 10
+	var cam_shake = load("res://scripts/camera_shake.gd")
+	if cam_shake != null:
+		cam_shake.shake(get_tree(), 0.70)
+	var am = load("res://scripts/audio_manager.gd")
+	if am != null:
+		am.play_emp(get_tree())
 
 func _process(delta: float):
 	time_alive += delta

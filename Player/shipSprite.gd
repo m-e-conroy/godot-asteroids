@@ -15,7 +15,7 @@ const THRUSTER_SHAPE: Array = [Vector2(3,11), Vector2(0,30), Vector2(-3,11), Vec
 @export var FORCE_FIELD_RECHARGE_COLOR: Color = Color(0.25, 0.7, 1.0, 0.28)
 @export var SHIP_COLOR: Color = Color.LAWN_GREEN
 
-var thrusterColorGradient: PackedColorArray = PackedColorArray([Color.DIM_GRAY, Color.BLACK, Color.DIM_GRAY, Color.DIM_GRAY])
+var thrusterColorGradient: PackedColorArray = PackedColorArray([Color(0.25, 0.85, 1.0, 0.9), Color(1.0, 0.75, 0.2, 0.2), Color(0.25, 0.85, 1.0, 0.9), Color(0.25, 0.85, 1.0, 0.9)])
 var pulse_time: float = 0.0
 
 func _process(delta):
@@ -23,15 +23,22 @@ func _process(delta):
 	queue_redraw() # calls _draw again, needed for thrusters and gauges
 
 func _draw():
+	var flicker: float = 0.85 + 0.3 * abs(sin(pulse_time * 9.5))
+	
 	# 1. Draw thrusters when parent variable is true for that thruster
 	if PARENT.TURN_LEFT:
-		draw_polygon(PackedVector2Array(RT_THRUSTER_SHAPE), thrusterColorGradient)
+		draw_polyline(PackedVector2Array(RT_THRUSTER_SHAPE), Color(0.25, 0.85, 1.0, 0.8), 1.8)
 	if PARENT.TURN_RIGHT:
-		draw_polygon(PackedVector2Array(LT_THRUSTER_SHAPE), thrusterColorGradient)
+		draw_polyline(PackedVector2Array(LT_THRUSTER_SHAPE), Color(0.25, 0.85, 1.0, 0.8), 1.8)
 	if PARENT.THRUST:
-		draw_polygon(PackedVector2Array(THRUSTER_SHAPE), thrusterColorGradient)
+		var flame_tip = Vector2(0, 26.0 * flicker + 6.0)
+		var outer_flame = PackedVector2Array([Vector2(4, 10), flame_tip, Vector2(-4, 10), Vector2(4, 10)])
+		var inner_flame = PackedVector2Array([Vector2(2, 10), Vector2(0, 18.0 * flicker + 4.0), Vector2(-2, 10), Vector2(2, 10)])
+		draw_polyline(outer_flame, Color(1.0, 0.65, 0.15, 0.85), 2.5)
+		draw_polyline(inner_flame, Color(0.85, 1.0, 1.0, 0.95), 1.6)
 
-	# 2. Draw the ship
+	# 2. Draw the ship (with subtle phosphor halo + sharp core)
+	draw_polyline(PackedVector2Array(SHIP_SHAPE), Color(SHIP_COLOR.r, SHIP_COLOR.g, SHIP_COLOR.b, 0.35), 4.5)
 	draw_polyline(PackedVector2Array(SHIP_SHAPE), SHIP_COLOR, 2.0)
 
 	# 2b. Draw weapon mode visual enhancements

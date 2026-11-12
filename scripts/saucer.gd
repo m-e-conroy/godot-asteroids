@@ -203,7 +203,7 @@ func destroy():
 	if parent_node != null:
 		var sm = get_tree().get_first_node_in_group("score_manager")
 		if sm != null:
-			sm.add_score(300)
+			sm.add_score(300, global_position)
 			
 		# Play authentic explosion audio
 		var sfx = AudioStreamPlayer2D.new()
@@ -223,6 +223,13 @@ func destroy():
 		emitter.color = COLOR_HULL
 		parent_node.add_child(crash)
 		emitter.emitting = true
+		
+		var shrapnel = load("res://effects/vector_shrapnel.gd")
+		if shrapnel != null:
+			shrapnel.spawn(parent_node, global_position, COLOR_HULL, 9, 1.3)
+		var cam_shake = load("res://scripts/camera_shake.gd")
+		if cam_shake != null:
+			cam_shake.shake(get_tree(), 0.45)
 		
 		# Drop random wireframe powerup
 		var pu = powerup_scene.instantiate()

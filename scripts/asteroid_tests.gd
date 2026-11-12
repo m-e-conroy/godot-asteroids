@@ -9,9 +9,16 @@ var asteroidScn = preload("res://Enemies/Asteroid/asteroid.tscn")
 var rock_crash = preload("res://effects/rock_crash.tscn")
 var ship_explosion_scene = preload("res://effects/ship_explosion.tscn")
 var saucer_scene = preload("res://Enemies/Saucer/saucer.tscn")
+var boss_scene = preload("res://Enemies/Boss/procedural_boss.tscn")
 var hud_scene = preload("res://ui/hud.tscn")
 var welcome_screen_scene = preload("res://ui/welcome_screen.tscn")
+var pause_menu_scene = preload("res://ui/pause_menu.tscn")
 var score_manager_script = preload("res://scripts/score_manager.gd")
+var audio_manager_script = preload("res://scripts/audio_manager.gd")
+var nebula_bg_script = preload("res://effects/nebula_background.gd")
+var camera_shake_script = preload("res://scripts/camera_shake.gd")
+var vector_shrapnel_script = preload("res://effects/vector_shrapnel.gd")
+var crt_shader = preload("res://effects/crt_overlay.gdshader")
 
 var rnd = RandomNumberGenerator.new()
 
@@ -22,8 +29,11 @@ var clones: Dictionary = {}
 var current_wave: int = 1
 var saucer_spawn_timer: float = 8.0
 var score_manager: Node = null
+var audio_manager: Node = null
 var hud: CanvasLayer = null
 var welcome_screen: CanvasLayer = null
+var pause_menu: CanvasLayer = null
+var crt_layer: CanvasLayer = null
 var can_restart: bool = false
 var game_over_return_timer: float = 0.0
 const GAME_OVER_TIMEOUT: float = 10.0
@@ -37,6 +47,9 @@ func _ready():
 	score_manager = score_manager_script.new()
 	add_child(score_manager)
 	
+	audio_manager = audio_manager_script.new()
+	add_child(audio_manager)
+	
 	hud = hud_scene.instantiate()
 	add_child(hud)
 	hud.connect_score_manager(score_manager)
@@ -48,6 +61,15 @@ func _ready():
 	welcome_screen.set_high_score(score_manager.high_score)
 	welcome_screen.launch_requested.connect(_on_welcome_launch)
 	
+	pause_menu = pause_menu_scene.instantiate()
+	add_child(pause_menu)
+	pause_menu.restart_requested.connect(restart_game)
+	pause_menu.briefing_requested.connect(return_to_welcome)
+	pause_menu.crt_toggled.connect(func(enabled: bool):
+		if crt_layer != null:
+			crt_layer.visible = enabled
+	)
+	
 	$player.visible = false
 	$player.is_dead = true
 	$player.global_position = screen_size / 2.0
@@ -55,7 +77,42 @@ func _ready():
 	$player.connect("fired_projectile", _on_player_fired_projectile)
 	$player.connect("ship_destroyed", _on_player_ship_destroyed)
 	
+	_setup_visual_polish()
 	generate_ambient_asteroids(6)
+
+func _setup_visual_polish():
+	# 1. Drifting Nebula & Parallax Space Dust
+	var nebula = nebula_bg_script.new()
+	add_child(nebula)
+	nebula.set_player($player)
+	
+	# 2. Trauma-based Camera Shake
+	var cam = camera_shake_script.new()
+	add_child(cam)
+	
+	# 3. HDR Phosphor Glow Environment
+	var world_env = WorldEnvironment.new()
+	var env = Environment.new()
+	env.background_mode = Environment.BG_CANVAS
+	env.glow_enabled = true
+	env.glow_intensity = 0.65
+	env.glow_bloom = 0.25
+	env.glow_hdr_threshold = 0.85
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+	world_env.environment = env
+	add_child(world_env)
+	
+	# 4. Authentic CRT Scanlines & Vignette Overlay
+	crt_layer = CanvasLayer.new()
+	crt_layer.layer = 100
+	var crt_rect = ColorRect.new()
+	crt_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	crt_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat = ShaderMaterial.new()
+	mat.shader = crt_shader
+	crt_rect.material = mat
+	crt_layer.add_child(crt_rect)
+	add_child(crt_layer)
 
 func _on_welcome_launch():
 	start_game()
@@ -69,6 +126,7 @@ func start_game():
 	if hud != null:
 		hud.visible = true
 		hud.hide_game_over()
+		hud.hide_boss_bar()
 		
 	current_wave = 1
 	saucer_spawn_timer = rnd.randf_range(14.0, 22.0)
@@ -97,6 +155,7 @@ func return_to_welcome():
 	if hud != null:
 		hud.visible = false
 		hud.hide_game_over()
+		hud.hide_boss_bar()
 		
 	$player.visible = false
 	$player.is_dead = true
@@ -108,7 +167,13 @@ func return_to_welcome():
 	generate_ambient_asteroids(6)
 
 func _input(event):
-	if game_state == GameState.GAME_OVER and can_restart:
+	if game_state == GameState.PLAYING:
+		if event is InputEventKey and event.pressed and not event.is_echo():
+			if event.keycode == KEY_ESCAPE or event.keycode == KEY_P:
+				if pause_menu != null and not pause_menu.visible:
+					pause_menu.open_pause()
+					get_viewport().set_input_as_handled()
+	elif game_state == GameState.GAME_OVER and can_restart:
 		if event is InputEventKey and event.pressed and not event.is_echo():
 			if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_R:
 				restart_game()
@@ -118,6 +183,8 @@ func _input(event):
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	if game_state == GameState.GAME_OVER:
+		if audio_manager != null:
+			audio_manager.set_heartbeat(false)
 		game_over_return_timer -= delta
 		if hud != null:
 			hud.set_game_over_countdown(game_over_return_timer)
@@ -126,7 +193,16 @@ func _process(delta):
 		return
 		
 	if game_state != GameState.PLAYING:
+		if audio_manager != null:
+			audio_manager.set_heartbeat(false)
 		return
+		
+	if audio_manager != null:
+		var remaining_rocks := 0
+		for a in get_tree().get_nodes_in_group("asteroids"):
+			if is_instance_valid(a) and !a.is_queued_for_deletion() and ("CLONED" in a and !a.CLONED):
+				remaining_rocks += 1
+		audio_manager.set_heartbeat(remaining_rocks > 0, remaining_rocks)
 		
 	saucer_spawn_timer -= delta
 	if saucer_spawn_timer <= 0.0:
@@ -159,17 +235,35 @@ func randomPosNegOne():
 # end randomPosNegOne
 
 func generateAsteroids():
+	var is_boss_wave: bool = (current_wave % 5 == 0)
 	var sizes = ['lg','md','sm','xs']
-	var n = min(10, rnd.randi_range(4, 6) + current_wave - 1)
+	var n = 3 if is_boss_wave else min(10, rnd.randi_range(4, 6) + current_wave - 1)
 	
 	for i in n:
 		var a = asteroidScn.instantiate()
-		a.SIZE = sizes[rnd.randi_range(0,3)]
+		a.SIZE = sizes[rnd.randi_range(1, 2)] if is_boss_wave else sizes[rnd.randi_range(0,3)]
 		a.position = Vector2(rnd.randi_range(0, screen_size.x), rnd.randi_range(0, screen_size.y))
 		a.linear_velocity = Vector2(rnd.randi_range(4,16) * randomPosNegOne(), rnd.randi_range(4,16) * randomPosNegOne())
 		a.angular_velocity = (randomPosNegOne() * rnd.randi_range(1,45)) * PI / 180
 		add_child(a)
 		a.connect("destroyed", asteroidDestroyed)
+		
+	if is_boss_wave:
+		spawn_boss(max(1, current_wave / 5))
+
+func spawn_boss(tier: int):
+	var b = boss_scene.instantiate()
+	b.tier = tier
+	b.global_position = Vector2(screen_size.x * 0.5, -50.0)
+	add_child(b)
+	if hud != null:
+		b.boss_hp_changed.connect(hud.update_boss_hp)
+		hud.update_boss_hp(b.health, b.max_health, b.boss_name)
+	b.boss_defeated.connect(func(_pos, _score_val):
+		if hud != null:
+			hud.hide_boss_bar()
+		call_deferred("_check_wave_cleared")
+	)
 			
 func generate_ambient_asteroids(count: int = 6):
 	var sizes = ['lg', 'md', 'sm']
@@ -186,10 +280,10 @@ func asteroidDestroyed(pos, size):
 	# award score based on asteroid size only during active play
 	if game_state == GameState.PLAYING and score_manager != null:
 		match size:
-			'lg': score_manager.add_score(20)
-			'md': score_manager.add_score(50)
-			'sm': score_manager.add_score(100)
-			'xs': score_manager.add_score(150)
+			'lg': score_manager.add_score(20, pos)
+			'md': score_manager.add_score(50, pos)
+			'sm': score_manager.add_score(100, pos)
+			'xs': score_manager.add_score(150, pos)
 
 	# explosion
 	match size:
@@ -234,6 +328,14 @@ func asteroidDestroyed(pos, size):
 				add_child(a)
 				a.connect("destroyed", asteroidDestroyed)
 	showAsteroidExplosion(pos)
+	vector_shrapnel_script.spawn(self, pos, Color(0.7, 0.95, 0.78), 7, 1.1)
+	if game_state == GameState.PLAYING:
+		var shake_amt := 0.12
+		if size == 'lg':
+			shake_amt = 0.28
+		elif size == 'md':
+			shake_amt = 0.18
+		camera_shake_script.shake(get_tree(), shake_amt)
 	call_deferred("_check_wave_cleared")
 
 func _check_wave_cleared():
@@ -243,7 +345,11 @@ func _check_wave_cleared():
 	for a in get_tree().get_nodes_in_group("asteroids"):
 		if is_instance_valid(a) and !a.is_queued_for_deletion() and ("CLONED" in a and !a.CLONED):
 			remaining += 1
+	for b in get_tree().get_nodes_in_group("bosses"):
+		if is_instance_valid(b) and !b.is_queued_for_deletion():
+			remaining += 1
 	if remaining == 0:
+		audio_manager_script.play_wave_clear(get_tree())
 		current_wave += 1
 		if score_manager != null:
 			score_manager.set_wave(current_wave)
@@ -270,6 +376,8 @@ func _on_player_ship_destroyed(pos: Vector2):
 	var explosion = ship_explosion_scene.instantiate()
 	explosion.global_position = pos
 	add_child(explosion)
+	vector_shrapnel_script.spawn(self, pos, Color(0.16, 0.94, 0.0), 10, 1.4)
+	camera_shake_script.shake(get_tree(), 0.85)
 	
 	var has_lives: bool = true
 	if score_manager != null:
@@ -304,6 +412,7 @@ func restart_game():
 	if hud != null:
 		hud.visible = true
 		hud.hide_game_over()
+		hud.hide_boss_bar()
 		
 	$player.visible = true
 	$player.respawn(screen_size / 2.0)
